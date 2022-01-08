@@ -13,6 +13,6 @@ public interface JourneyRepository extends JpaRepository<Journey, Integer>{
 	Journey findByJourneyId(Integer journeyId);
 
 	@Query(value=QueryConstants.GET_JOURNEY)
-	List<Journey> getJourney(Integer flightId, String trim, String trim2);
+	List<Journey> getJourney(Integer flightId, String fromLocation, String toLocation);
 
 }
