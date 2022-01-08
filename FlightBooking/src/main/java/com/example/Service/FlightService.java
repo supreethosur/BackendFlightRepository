@@ -1,5 +1,4 @@
 package com.example.Service;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,8 +123,9 @@ public class FlightService {
 		List<Flight> oneWayFlights = new ArrayList<>();
 		List<Flight> twoWayFlights = new ArrayList<>();
 		
-		String day = searchModel.getTravelStartDate().getDayOfWeek().toString();
+		
 		String scheduleType="";
+		String day = searchModel.getTravelStartDate().getDayOfWeek().toString();
 		if(day.equals("SUNDAY") || day.equals("SATURDAY") ) {
 			scheduleType="WE";
 		}
@@ -135,11 +135,18 @@ public class FlightService {
 		
 		
 		
-		oneWayFlights = flightRepo.findFlights(searchModel.getFromPlace(),searchModel.getToPlace(), searchModel.getTravelStartDate());
+		oneWayFlights = flightRepo.findFlights(searchModel.getFromPlace(),searchModel.getToPlace(),scheduleType);
 		flightMapList.put("1", oneWayFlights);
 		
 		if (searchModel.isRoundTrip()) {
-			twoWayFlights = flightRepo.findFlights(searchModel.getToPlace(),searchModel.getFromPlace(), searchModel.getTravelReturnDate());
+			day = searchModel.getTravelReturnDate().getDayOfWeek().toString();
+			if(day.equals("SUNDAY") || day.equals("SATURDAY") ) {
+				scheduleType="WE";
+			}
+			else {
+				scheduleType="WD";
+			}
+			twoWayFlights = flightRepo.findFlights(searchModel.getToPlace(),searchModel.getFromPlace() ,scheduleType);
 			flightMapList.put("2", twoWayFlights);
 		}
 		

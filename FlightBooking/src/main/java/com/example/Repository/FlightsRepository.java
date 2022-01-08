@@ -20,7 +20,7 @@ public interface FlightsRepository extends JpaRepository<Flight, Integer>{
 
 
 	@Query(value=QueryConstants.GET_FLIGHTS)
-	List<Flight> findFlights(String fromPlace, String toPlace, LocalDate travelStartDate);
+	List<Flight> findFlights(String fromPlace, String toPlace, String scheduleType);
 
 
 	Flight findByFlightId(Integer flightId);

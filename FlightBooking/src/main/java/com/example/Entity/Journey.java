@@ -1,7 +1,5 @@
 package com.example.Entity;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import javax.persistence.GeneratedValue;

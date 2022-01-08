@@ -1,5 +1,7 @@
 package com.example.Entity;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -11,6 +13,7 @@ public class BookingHeader {
 	private Integer flightId;
 	private String bookingStatus;
 	private String userEmailId;
+	private LocalDateTime bookingDate;
 	
 	
 	public Integer getFlightId() {
