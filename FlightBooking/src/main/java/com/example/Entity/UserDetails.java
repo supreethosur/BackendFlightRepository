@@ -8,7 +8,14 @@ public class UserDetails {
 	@Id
 	private Integer userId;
 	private String userName;
+	private Integer userMailId;
 	
+	public Integer getUserMailId() {
+		return userMailId;
+	}
+	public void setUserMailId(Integer userMailId) {
+		this.userMailId = userMailId;
+	}
 	public Integer getUserId() {
 		return userId;
 	}

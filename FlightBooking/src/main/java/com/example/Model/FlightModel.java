@@ -18,8 +18,15 @@ public class FlightModel {
 	private Integer businessSeats;
 	private Integer nonBusinessSeats;
 	private String scheduleType;
+	private Double amount;
 	
 	
+	public Double getAmount() {
+		return amount;
+	}
+	public void setAmount(Double amount) {
+		this.amount = amount;
+	}
 	public LocalDate getArrivalDate() {
 		return arrivalDate;
 	}

@@ -1,4 +1,5 @@
 package com.example.Service;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,15 +8,22 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.Entity.BookingHeader;
 import com.example.Entity.Flight;
 import com.example.Entity.Journey;
 import com.example.Entity.JourneyTransactionDetails;
+import com.example.Entity.Passanger;
+import com.example.Entity.TicketDetails;
 import com.example.Model.FlightModel;
+import com.example.Model.PassangerModel;
 import com.example.Model.SearchFlightModel;
+import com.example.Repository.BookingHeaderRepository;
 import com.example.Repository.CityRepository;
 import com.example.Repository.FlightsRepository;
 import com.example.Repository.JourneyRepository;
 import com.example.Repository.JourneyTransactionDetailsRepository;
+import com.example.Repository.PassengerRepository;
+import com.example.Repository.TicketDetailsRepository;
 
 @Service
 public class FlightService {
@@ -31,7 +39,17 @@ public class FlightService {
 	
 	@Autowired
 	JourneyTransactionDetailsRepository journeyTransactionDetailsRepo; 
-
+	
+	@Autowired
+	PassengerRepository passangerRepo;
+	
+	@Autowired
+	BookingHeaderRepository bookingHeaderRepo; 
+	
+	@Autowired
+	TicketDetailsRepository ticketDetailsRepo;
+	
+	
 	//	@Cacheable(key ="#id",value = "flightStore")
 	public Flight findById(Integer id) throws Exception {
 		System.out.println("inside service");
@@ -167,7 +185,7 @@ public class FlightService {
 				flightModel.setScheduleType(scheduleType);
 				flightModel.setNonBusinessSeats(businessSeats);		
 				flightModel.setNonBusinessSeats(nonBusinessSeats);
-				
+				flightModel.setAmount(journey.getAmount());
 				oneWayFlights.add(flightModel);
 			}
 		}
@@ -207,7 +225,7 @@ public class FlightService {
 					flightModel.setScheduleType(scheduleType);
 					flightModel.setNonBusinessSeats(businessSeats);		
 					flightModel.setNonBusinessSeats(nonBusinessSeats);
-
+					flightModel.setAmount(journey.getAmount());
 
 					twoWayFlights.add(flightModel);
 				} 
@@ -221,6 +239,42 @@ public class FlightService {
 
 		List<String> cities=cityRepo.findCityNameByCityNameStartswith(cityName);
 		return cities;
+	}
+	public void addPassanger(PassangerModel passangerModel) {
+		
+		Passanger passanger =new Passanger();
+		
+		passanger.setPassangerName(passangerModel.getPassangeName());
+		passanger.setAge(passangerModel.getAge());
+		passanger.setAssociatedUserId(passangerModel.getUserId());
+		passanger.setGender(passangerModel.getGender());
+		
+		Passanger addedpassanger = passangerRepo.save(passanger);
+		
+		TicketDetails ticket = new TicketDetails();
+		BookingHeader header=bookingHeaderRepo.findByPnrNumber(passangerModel.getPnrNumber());
+		Journey journey=journeyRepo.findByJourneyId(header.getJourneyId());
+		Double amount=journey.getAmount();
+		if(passangerModel.isBusinessClass()) {
+			amount=amount*1.5;
+		}
+		
+		ticket.setAmount(amount);
+		ticket.setOptedMeals(passangerModel.getMealsType());
+		ticket.setPnrNo(passangerModel.getPnrNumber());
+		TicketDetails addedticket =ticketDetailsRepo.save(ticket);
+		
+		
+	}
+	public void proceedWithBooking(HashMap<String, Integer> model) {
+		BookingHeader header =new BookingHeader();
+		header.setBookingDate(LocalDateTime.now());
+		header.setBookingStatus(1);
+		header.setJourneyId(model.get("JourneyId"));
+		header.setUserId(model.get("UserId"));
+		
+		
+		
 	}
 
 

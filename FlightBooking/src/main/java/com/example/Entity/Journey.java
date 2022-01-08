@@ -18,7 +18,17 @@ public class Journey {
 	private LocalTime arrivalTime;
 	private String fromLocation;
 	private String toLocation;
+	private Double amount;
 	
+	
+	public Double getAmount() {
+		return amount;
+	}
+
+	public void setAmount(Double amount) {
+		this.amount = amount;
+	}
+
 	public LocalTime getDepartureTime() {
 		return departureTime;
 	}

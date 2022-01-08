@@ -3,16 +3,19 @@ package com.example.Entity;
 import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
 public class BookingHeader {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer pnrNumber;
-	private Integer flightId;
-	private String bookingStatus;
-	private String userEmailId;
+	private Integer journeyId;
+	private Integer bookingStatus;
+	private Integer userId;
 	private LocalDateTime bookingDate;
 	
 	
@@ -22,17 +25,19 @@ public class BookingHeader {
 	public void setBookingDate(LocalDateTime bookingDate) {
 		this.bookingDate = bookingDate;
 	}
-	public Integer getFlightId() {
-		return flightId;
+	
+	public Integer getJourneyId() {
+		return journeyId;
 	}
-	public void setFlightId(Integer flightId) {
-		this.flightId = flightId;
+	public void setJourneyId(Integer journeyId) {
+		this.journeyId = journeyId;
 	}
-	public String getUserEmailId() {
-		return userEmailId;
+	
+	public Integer getUserId() {
+		return userId;
 	}
-	public void setUserEmailId(String userEmailId) {
-		this.userEmailId = userEmailId;
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 	public Integer getPnrNumber() {
 		return pnrNumber;
@@ -40,10 +45,10 @@ public class BookingHeader {
 	public void setPnrNumber(Integer pnrNumber) {
 		this.pnrNumber = pnrNumber;
 	}
-	public String getBookingStatus() {
+	public Integer getBookingStatus() {
 		return bookingStatus;
 	}
-	public void setBookingStatus(String bookingStatus) {
+	public void setBookingStatus(Integer bookingStatus) {
 		this.bookingStatus = bookingStatus;
 	}
 	
