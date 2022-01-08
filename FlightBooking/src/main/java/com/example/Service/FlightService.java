@@ -7,10 +7,12 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.Entity.City;
 import com.example.Entity.Flight;
 import com.example.Entity.Journey;
 import com.example.Model.FlightModel;
 import com.example.Model.SearchFlightModel;
+import com.example.Repository.CityRepository;
 import com.example.Repository.FlightsRepository;
 import com.example.Repository.JourneyRepository;
 
@@ -22,6 +24,9 @@ public class FlightService {
 	
 	@Autowired
 	JourneyRepository journeyRepo;
+	
+	@Autowired
+	CityRepository cityRepo;
 	
 //	@Cacheable(key ="#id",value = "flightStore")
 	public Flight findById(Integer id) throws Exception {
@@ -122,8 +127,6 @@ public class FlightService {
 		HashMap<String , List<Flight>> flightMapList=new HashMap<>();
 		List<Flight> oneWayFlights = new ArrayList<>();
 		List<Flight> twoWayFlights = new ArrayList<>();
-		
-		
 		String scheduleType="";
 		String day = searchModel.getTravelStartDate().getDayOfWeek().toString();
 		if(day.equals("SUNDAY") || day.equals("SATURDAY") ) {
@@ -132,12 +135,8 @@ public class FlightService {
 		else {
 			scheduleType="WD";
 		}
-		
-		
-		
-		oneWayFlights = flightRepo.findFlights(searchModel.getFromPlace(),searchModel.getToPlace(),scheduleType);
+		oneWayFlights = flightRepo.findFlights(searchModel.getFromPlace().split(";")[0].trim(),searchModel.getToPlace().split(";")[0].trim(),scheduleType);
 		flightMapList.put("1", oneWayFlights);
-		
 		if (searchModel.isRoundTrip()) {
 			day = searchModel.getTravelReturnDate().getDayOfWeek().toString();
 			if(day.equals("SUNDAY") || day.equals("SATURDAY") ) {
@@ -146,11 +145,17 @@ public class FlightService {
 			else {
 				scheduleType="WD";
 			}
-			twoWayFlights = flightRepo.findFlights(searchModel.getToPlace(),searchModel.getFromPlace() ,scheduleType);
+			twoWayFlights = flightRepo.findFlights(searchModel.getToPlace().split(";")[0].trim(),searchModel.getFromPlace().split(";")[0].trim() ,scheduleType);
 			flightMapList.put("2", twoWayFlights);
 		}
-		
 		return flightMapList;
+	}
+	
+	
+	public List<String> getCities(String cityName) {
+
+		List<String> cities=cityRepo.findCityNameByCityNameStartswith(cityName);
+		return cities;
 	}
 	
 	
