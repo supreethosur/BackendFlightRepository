@@ -16,6 +16,12 @@ public class BookingHeader {
 	private LocalDateTime bookingDate;
 	
 	
+	public LocalDateTime getBookingDate() {
+		return bookingDate;
+	}
+	public void setBookingDate(LocalDateTime bookingDate) {
+		this.bookingDate = bookingDate;
+	}
 	public Integer getFlightId() {
 		return flightId;
 	}
