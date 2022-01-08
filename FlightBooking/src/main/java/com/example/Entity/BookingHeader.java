@@ -1,5 +1,6 @@
 package com.example.Entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
@@ -17,8 +18,15 @@ public class BookingHeader {
 	private Integer bookingStatus;
 	private Integer userId;
 	private LocalDateTime bookingDate;
+	private LocalDate journeyDate;
 	
 	
+	public LocalDate getJourneyDate() {
+		return journeyDate;
+	}
+	public void setJourneyDate(LocalDate journeyDate) {
+		this.journeyDate = journeyDate;
+	}
 	public LocalDateTime getBookingDate() {
 		return bookingDate;
 	}

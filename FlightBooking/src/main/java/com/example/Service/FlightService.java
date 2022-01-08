@@ -16,6 +16,7 @@ import com.example.Entity.Passanger;
 import com.example.Entity.TicketDetails;
 import com.example.Model.FlightModel;
 import com.example.Model.PassangerModel;
+import com.example.Model.ProceedBookingModel;
 import com.example.Model.SearchFlightModel;
 import com.example.Repository.BookingHeaderRepository;
 import com.example.Repository.CityRepository;
@@ -36,20 +37,20 @@ public class FlightService {
 
 	@Autowired
 	CityRepository cityRepo;
-	
+
 	@Autowired
 	JourneyTransactionDetailsRepository journeyTransactionDetailsRepo; 
-	
+
 	@Autowired
 	PassengerRepository passangerRepo;
-	
+
 	@Autowired
 	BookingHeaderRepository bookingHeaderRepo; 
-	
+
 	@Autowired
 	TicketDetailsRepository ticketDetailsRepo;
-	
-	
+
+
 	//	@Cacheable(key ="#id",value = "flightStore")
 	public Flight findById(Integer id) throws Exception {
 		System.out.println("inside service");
@@ -160,10 +161,10 @@ public class FlightService {
 		List<Flight> flight1 = flightRepo.findFlights(scheduleType);
 		for (Flight flight : flight1) {
 			List<Journey> journey1= journeyRepo.getJourney(flight.getFlightId(),searchModel.getFromPlace().split(";")[0].trim(),searchModel.getToPlace().split(";")[0].trim());
-			
+
 			for (Journey journey : journey1) {
 				FlightModel flightModel=new FlightModel();
-				
+
 				JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(journey.getJourneyId(),searchModel.getTravelStartDate());
 				Integer businessSeats=flight.getBusinessSeats();
 				Integer nonBusinessSeats=flight.getNonBusinessSeats();
@@ -171,7 +172,7 @@ public class FlightService {
 					businessSeats=journeyTransactionDetails.getBusinessSeatsAvailable();
 					nonBusinessSeats=journeyTransactionDetails.getNonBusinessSeatsAvailable();
 				}
-				
+
 				flightModel.setFlightId(flight.getFlightId());
 				flightModel.setJourneyId(journey.getJourneyId());
 				flightModel.setAirline(flight.getAirline());
@@ -203,7 +204,7 @@ public class FlightService {
 				List<Journey> journey2= journeyRepo.getJourney(flight.getFlightId(),searchModel.getToPlace().split(";")[0].trim(),searchModel.getFromPlace().split(";")[0].trim() );
 				for (Journey journey : journey2) {
 					FlightModel flightModel=new FlightModel();
-					
+
 					JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(journey.getJourneyId(),searchModel.getTravelReturnDate());
 					Integer businessSeats=flight.getBusinessSeats();
 					Integer nonBusinessSeats=flight.getNonBusinessSeats();
@@ -211,7 +212,7 @@ public class FlightService {
 						businessSeats=journeyTransactionDetails.getBusinessSeatsAvailable();
 						nonBusinessSeats=journeyTransactionDetails.getNonBusinessSeatsAvailable();
 					}
-					
+
 					flightModel.setFlightId(flight.getFlightId());
 					flightModel.setJourneyId(journey.getJourneyId());
 					flightModel.setAirline(flight.getAirline());
@@ -241,40 +242,111 @@ public class FlightService {
 		return cities;
 	}
 	public void addPassanger(PassangerModel passangerModel) {
-		
+
 		Passanger passanger =new Passanger();
-		
+
 		passanger.setPassangerName(passangerModel.getPassangeName());
 		passanger.setAge(passangerModel.getAge());
 		passanger.setAssociatedUserId(passangerModel.getUserId());
 		passanger.setGender(passangerModel.getGender());
-		
+
 		Passanger addedpassanger = passangerRepo.save(passanger);
-		
+
 		TicketDetails ticket = new TicketDetails();
 		BookingHeader header=bookingHeaderRepo.findByPnrNumber(passangerModel.getPnrNumber());
 		Journey journey=journeyRepo.findByJourneyId(header.getJourneyId());
 		Double amount=journey.getAmount();
+		String className="Non-Business";
 		if(passangerModel.isBusinessClass()) {
 			amount=amount*1.5;
+			className="Business";
 		}
-		
+		ticket.setClassName(className);
 		ticket.setAmount(amount);
 		ticket.setOptedMeals(passangerModel.getMealsType());
 		ticket.setPnrNo(passangerModel.getPnrNumber());
 		TicketDetails addedticket =ticketDetailsRepo.save(ticket);
-		
-		
+
+
 	}
-	public void proceedWithBooking(HashMap<String, Integer> model) {
+	public BookingHeader proceedWithBooking(ProceedBookingModel model) {
 		BookingHeader header =new BookingHeader();
 		header.setBookingDate(LocalDateTime.now());
 		header.setBookingStatus(1);
-		header.setJourneyId(model.get("JourneyId"));
-		header.setUserId(model.get("UserId"));
-		
-		
-		
+		header.setJourneyId(model.getJourneyId());
+		header.setUserId(model.getUserId());
+		header.setJourneyDate(model.getJourneyDate());
+		BookingHeader bookingHeader=bookingHeaderRepo.save(header);
+
+		return bookingHeader;
+	}
+
+
+	public BookingHeader finalSubmission(Integer pnrNumber) throws Exception {
+
+		List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassName(pnrNumber,"Non-Business");
+		List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassName(pnrNumber,"Business");
+		BookingHeader bookingHeader=bookingHeaderRepo.findByPnrNumber(pnrNumber);
+		JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(bookingHeader.getJourneyId(),bookingHeader.getJourneyDate());
+		Integer ticketBusinessCount=0;
+		Integer ticketNonBusinessCount=0;
+		if(ticketBusiness!=null) {
+			ticketBusinessCount=ticketBusiness.size();
+		}
+		if(ticketNonBusiness!=null) {
+			ticketNonBusinessCount=ticketNonBusiness.size();
+		}
+		if(journeyTransactionDetails!=null) {
+			Integer businessSeatsAvailable=journeyTransactionDetails.getBusinessSeatsAvailable();
+			Integer nonBusinessSeatsAvailable=journeyTransactionDetails.getNonBusinessSeatsAvailable();
+			ticketBusinessCount=0;
+			ticketNonBusinessCount=0;
+			if(ticketBusiness!=null) {
+				ticketBusinessCount=ticketBusiness.size();
+			}
+			if(ticketNonBusiness!=null) {
+				ticketNonBusinessCount=ticketNonBusiness.size();
+			}
+
+			if( businessSeatsAvailable < ticketBusinessCount) {
+				throw new Exception("Please reduce the number of business class tickets or check with other flights");
+			}
+			else {
+				journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getBusinessSeatsAvailable()-ticketBusinessCount);
+			}
+			if( nonBusinessSeatsAvailable < ticketNonBusinessCount) {
+				throw new Exception("Please reduce the number of non business class tickets or check with other flights");
+			}
+			else {
+				journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getNonBusinessSeatsAvailable()-ticketNonBusinessCount);
+			}
+
+			journeyTransactionDetailsRepo.save(journeyTransactionDetails);
+		}
+		else {
+			Journey journey=journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
+			Flight flight=flightRepo.findByFlightId(journey.getFlightId());
+			JourneyTransactionDetails journeyTransactionDetails1 =new JourneyTransactionDetails();
+
+			Integer businessSeats=flight.getBusinessSeats();
+			Integer nonBusinessSeats=flight.getNonBusinessSeats();
+
+
+			journeyTransactionDetails1.setBusinessSeatsAvailable(businessSeats-ticketBusinessCount);
+			journeyTransactionDetails1.setNonBusinessSeatsAvailable(nonBusinessSeats-ticketNonBusinessCount);
+			journeyTransactionDetails1.setJourneyId(bookingHeader.getJourneyId());
+			journeyTransactionDetails1.setJourneyDate(bookingHeader.getJourneyDate());
+
+			journeyTransactionDetailsRepo.save(journeyTransactionDetails1);
+		}
+
+		bookingHeader.setBookingStatus(2);
+		bookingHeader.setBookingDate(LocalDateTime.now());
+
+		BookingHeader header=bookingHeaderRepo.save(bookingHeader);
+
+
+		return header;
 	}
 
 
