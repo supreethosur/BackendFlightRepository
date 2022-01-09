@@ -20,7 +20,16 @@ public class BookingHeader {
 	private LocalDateTime bookingDate;
 	private LocalDate journeyDate;
 	private double finalAmount;
+	private boolean isOneWayTrip;
 	
+	
+	
+	public boolean isOneWayTrip() {
+		return isOneWayTrip;
+	}
+	public void setOneWayTrip(boolean isOneWayTrip) {
+		this.isOneWayTrip = isOneWayTrip;
+	}
 	public double getFinalAmount() {
 		return finalAmount;
 	}

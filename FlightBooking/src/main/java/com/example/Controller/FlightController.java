@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.Entity.BookingHeader;
 import com.example.Entity.Flight;
 import com.example.Entity.TicketDetails;
-import com.example.Entity.UserDetails;
 import com.example.Model.FlightModel;
 import com.example.Model.HistoryModel;
 import com.example.Model.PassangerModel;
@@ -61,30 +60,30 @@ FlightService flightService;
 	}
 	
 	@PostMapping("/addPassanger")
-	public TicketDetails addPassanger(@RequestBody PassangerModel passangerModel) {
-		TicketDetails ticket = flightService.addPassanger(passangerModel);
+	public List<TicketDetails> addPassanger(@RequestBody List<PassangerModel> passangerModel) {
+		List<TicketDetails> ticket = flightService.addPassanger(passangerModel);
 		return ticket;
 	}
 	
 	
 	@PostMapping("/proceedWithFlight")
-	public BookingHeader proceedWithBooking(ProceedBookingModel model) {
+	public List<BookingHeader> proceedWithBooking(ProceedBookingModel model) {
 		return flightService.proceedWithBooking(model);
 	}
 	
 	@PostMapping("/finalSubmission")
-	public BookingHeader finalSubmission(Integer pnrNumber) throws Exception {
+	public List<BookingHeader> finalSubmission(List<Integer> pnrNumber) throws Exception {
 		return flightService.finalSubmission(pnrNumber);
 	}
 	
 	@GetMapping("/getSummary")
-	public SummaryModel getSummary(Integer pnrNumber)  {
-		return flightService.geSummary(pnrNumber);
+	public List<SummaryModel> getSummary(Integer pnrNumber)  {
+		return flightService.getSummary(pnrNumber);
 	}
 	
 	@PostMapping("/deletePassanger")
-	public void deletePassanger(Integer TicketId) throws Exception {
-		 flightService.deletePassanger(TicketId);
+	public void deletePassanger(Integer passangerId) throws Exception {
+		 flightService.deletePassanger(passangerId);
 	}
 	
 	 
@@ -95,7 +94,7 @@ FlightService flightService;
 	
 	@GetMapping("/getHistoryByemailId")
 	public List<HistoryModel> getHistoryByemailId(String emailId)  {
-		return flightService.getHistoryByemailId(emailId);
+		return flightService.getHistoryByemailIdOrPnr(emailId);
 	}
 	
 }

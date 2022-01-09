@@ -1,31 +1,34 @@
 package com.example.Model;
 
-import java.time.LocalDate;
+import java.util.List;
 
 public class ProceedBookingModel {
 
-	private Integer journeyId;
+	private List<JourneyInputModel> journeyInputModel;
 	private Integer userId;
-	private LocalDate journeyDate;
+	private boolean isOneWaytrip;
 	
-	public Integer getJourneyId() {
-		return journeyId;
+	
+	
+	public boolean isOneWaytrip() {
+		return isOneWaytrip;
 	}
-	public void setJourneyId(Integer journeyId) {
-		this.journeyId = journeyId;
+	public void setOneWaytrip(boolean isOneWaytrip) {
+		this.isOneWaytrip = isOneWaytrip;
 	}
 	
+	public List<JourneyInputModel> getJourneyInputModel() {
+		return journeyInputModel;
+	}
+	public void setJourneyInputModel(List<JourneyInputModel> journeyInputModel) {
+		this.journeyInputModel = journeyInputModel;
+	}
 	public Integer getUserId() {
 		return userId;
 	}
 	public void setUserId(Integer userId) {
 		this.userId = userId;
 	}
-	public LocalDate getJourneyDate() {
-		return journeyDate;
-	}
-	public void setJourneyDate(LocalDate journeyDate) {
-		this.journeyDate = journeyDate;
-	}
+	
 	
 }

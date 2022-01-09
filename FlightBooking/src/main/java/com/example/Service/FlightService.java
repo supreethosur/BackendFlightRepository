@@ -20,6 +20,7 @@ import com.example.Entity.UserDetails;
 import com.example.Model.FinalAmount;
 import com.example.Model.FlightModel;
 import com.example.Model.HistoryModel;
+import com.example.Model.JourneyInputModel;
 import com.example.Model.PassangerModel;
 import com.example.Model.ProceedBookingModel;
 import com.example.Model.SearchFlightModel;
@@ -255,119 +256,143 @@ public class FlightService {
 		List<String> cities=cityRepo.findCityNameByCityNameStartswith(cityName);
 		return cities;
 	}
-	public TicketDetails addPassanger(PassangerModel passangerModel) {
+	
+	public List<TicketDetails> addPassanger(List<PassangerModel> passangerModelList) {
+		List<TicketDetails> ticketDetailsList =new ArrayList<>();
+		for (PassangerModel passangerModel : passangerModelList) {
+			Passanger passanger =new Passanger();
 
-		Passanger passanger =new Passanger();
+			passanger.setPassangerName(passangerModel.getPassangeName());
+			passanger.setAge(passangerModel.getAge());
+			passanger.setAssociatedUserId(passangerModel.getUserId());
+			passanger.setGender(passangerModel.getGender());
 
-		passanger.setPassangerName(passangerModel.getPassangeName());
-		passanger.setAge(passangerModel.getAge());
-		passanger.setAssociatedUserId(passangerModel.getUserId());
-		passanger.setGender(passangerModel.getGender());
+			Passanger addedpassanger = passangerRepo.save(passanger);
 
-		Passanger addedpassanger = passangerRepo.save(passanger);
-
-		TicketDetails ticket = new TicketDetails();
-		BookingHeader header=bookingHeaderRepo.findByPnrNumber(passangerModel.getPnrNumber());
-		Journey journey=journeyRepo.findByJourneyId(header.getJourneyId());
-		Double amount=journey.getAmount();
-		String className="Non-Business";
-		if(passangerModel.isBusinessClass()) {
-			amount=amount*1.5;
-			className="Business";
-		}
-		ticket.setClassName(className);
-		ticket.setAmount(amount);
-		ticket.setOptedMeals(passangerModel.getMealsType());
-		ticket.setPnrNo(passangerModel.getPnrNumber());
-		ticket.setIsActive(1);
-		TicketDetails addedticket =ticketDetailsRepo.save(ticket);
-
-		return addedticket;
+			TicketDetails ticket = new TicketDetails();
+			BookingHeader header=bookingHeaderRepo.findByPnrNumber(passangerModel.getPnrNumber());
+			Journey journey=journeyRepo.findByJourneyId(header.getJourneyId());
+			Double amount=journey.getAmount();
+			String className="Non-Business";
+			if(passangerModel.isBusinessClass()) {
+				amount=amount*1.5;
+				className="Business";
+			}
+			ticket.setClassName(className);
+			ticket.setAmount(amount);
+			ticket.setOptedMeals(passangerModel.getMealsType());
+			ticket.setPnrNo(passangerModel.getPnrNumber());
+			ticket.setIsActive(1);
+			TicketDetails addedticket =ticketDetailsRepo.save(ticket);
 		
-
-	}
-	public BookingHeader proceedWithBooking(ProceedBookingModel model) {
-		BookingHeader header =new BookingHeader();
-		header.setBookingDate(LocalDateTime.now());
-		header.setBookingStatus(1);
-		header.setJourneyId(model.getJourneyId());
-		header.setUserId(model.getUserId());
-		header.setJourneyDate(model.getJourneyDate());
-		BookingHeader bookingHeader=bookingHeaderRepo.save(header);
-
-		return bookingHeader;
-	}
-
-
-	public BookingHeader finalSubmission(Integer pnrNumber) throws Exception {
-
-		List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Non-Business",1);
-		List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Business",1);
-		BookingHeader bookingHeader=bookingHeaderRepo.findByPnrNumber(pnrNumber);
-		JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(bookingHeader.getJourneyId(),bookingHeader.getJourneyDate());
-		Integer ticketBusinessCount=0;
-		Integer ticketNonBusinessCount=0;
-		if(ticketBusiness!=null) {
-			ticketBusinessCount=ticketBusiness.size();
+			
+			ticketDetailsList.add(addedticket);
 		}
-		if(ticketNonBusiness!=null) {
-			ticketNonBusinessCount=ticketNonBusiness.size();
+		return ticketDetailsList;
+	}
+	
+	public List<BookingHeader> proceedWithBooking(ProceedBookingModel model) {
+		List<BookingHeader> bookingList =new ArrayList<>();
+		if(model.isOneWaytrip()) {
+			BookingHeader header =new BookingHeader();
+			header.setBookingDate(LocalDateTime.now());
+			header.setBookingStatus(1);
+			header.setJourneyId(model.getJourneyInputModel().get(0).getJourneyId());
+			header.setUserId(model.getUserId());
+			header.setJourneyDate(model.getJourneyInputModel().get(0).getJourneyDate());
+			header.setOneWayTrip(true);
+			
+			BookingHeader bookingHeader=bookingHeaderRepo.save(header);
+			bookingList.add(bookingHeader);
 		}
-		if(journeyTransactionDetails!=null) {
-			Integer businessSeatsAvailable=journeyTransactionDetails.getBusinessSeatsAvailable();
-			Integer nonBusinessSeatsAvailable=journeyTransactionDetails.getNonBusinessSeatsAvailable();
-			ticketBusinessCount=0;
-			ticketNonBusinessCount=0;
+		else {
+			for (JourneyInputModel iterable_element : model.getJourneyInputModel()) {
+				BookingHeader header =new BookingHeader();
+				header.setBookingDate(LocalDateTime.now());
+				header.setBookingStatus(1);
+				header.setJourneyId(iterable_element.getJourneyId());
+				header.setUserId(model.getUserId());
+				header.setJourneyDate(iterable_element.getJourneyDate());
+				header.setOneWayTrip(false);
+				BookingHeader bookingHeader=bookingHeaderRepo.save(header);
+				bookingList.add(bookingHeader);
+			}
+		}
+		return bookingList;
+	}
+
+
+	public List<BookingHeader> finalSubmission(List<Integer> pnrNumberList) throws Exception {
+		List<BookingHeader> headerList =new ArrayList<>();
+		for (Integer pnrNumber : pnrNumberList) {
+			List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Non-Business",1);
+			List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Business",1);
+			BookingHeader bookingHeader=bookingHeaderRepo.findByPnrNumber(pnrNumber);
+			JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(bookingHeader.getJourneyId(),bookingHeader.getJourneyDate());
+			Integer ticketBusinessCount=0;
+			Integer ticketNonBusinessCount=0;
 			if(ticketBusiness!=null) {
 				ticketBusinessCount=ticketBusiness.size();
 			}
 			if(ticketNonBusiness!=null) {
 				ticketNonBusinessCount=ticketNonBusiness.size();
 			}
+			if(journeyTransactionDetails!=null) {
+				Integer businessSeatsAvailable=journeyTransactionDetails.getBusinessSeatsAvailable();
+				Integer nonBusinessSeatsAvailable=journeyTransactionDetails.getNonBusinessSeatsAvailable();
+				ticketBusinessCount=0;
+				ticketNonBusinessCount=0;
+				if(ticketBusiness!=null) {
+					ticketBusinessCount=ticketBusiness.size();
+				}
+				if(ticketNonBusiness!=null) {
+					ticketNonBusinessCount=ticketNonBusiness.size();
+				}
 
-			if( businessSeatsAvailable < ticketBusinessCount) {
-				throw new Exception("Please reduce the number of business class tickets or check with other flights");
+				if( businessSeatsAvailable < ticketBusinessCount) {
+					throw new Exception("Please reduce the number of business class tickets or check with other flights");
+				}
+				else {
+					journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getBusinessSeatsAvailable()-ticketBusinessCount);
+				}
+				if( nonBusinessSeatsAvailable < ticketNonBusinessCount) {
+					throw new Exception("Please reduce the number of non business class tickets or check with other flights");
+				}
+				else {
+					journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getNonBusinessSeatsAvailable()-ticketNonBusinessCount);
+				}
+
+				journeyTransactionDetailsRepo.save(journeyTransactionDetails);
 			}
 			else {
-				journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getBusinessSeatsAvailable()-ticketBusinessCount);
-			}
-			if( nonBusinessSeatsAvailable < ticketNonBusinessCount) {
-				throw new Exception("Please reduce the number of non business class tickets or check with other flights");
-			}
-			else {
-				journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getNonBusinessSeatsAvailable()-ticketNonBusinessCount);
+				Journey journey=journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
+				Flight flight=flightRepo.findByFlightId(journey.getFlightId());
+				JourneyTransactionDetails journeyTransactionDetails1 =new JourneyTransactionDetails();
+
+				Integer businessSeats=flight.getBusinessSeats();
+				Integer nonBusinessSeats=flight.getNonBusinessSeats();
+
+
+				journeyTransactionDetails1.setBusinessSeatsAvailable(businessSeats-ticketBusinessCount);
+				journeyTransactionDetails1.setNonBusinessSeatsAvailable(nonBusinessSeats-ticketNonBusinessCount);
+				journeyTransactionDetails1.setJourneyId(bookingHeader.getJourneyId());
+				journeyTransactionDetails1.setJourneyDate(bookingHeader.getJourneyDate());
+
+				journeyTransactionDetailsRepo.save(journeyTransactionDetails1);
 			}
 
-			journeyTransactionDetailsRepo.save(journeyTransactionDetails);
+			bookingHeader.setBookingStatus(2);
+			bookingHeader.setBookingDate(LocalDateTime.now());
+			
+			BookingHeader header=bookingHeaderRepo.save(bookingHeader);
+			headerList.add(header);
 		}
-		else {
-			Journey journey=journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
-			Flight flight=flightRepo.findByFlightId(journey.getFlightId());
-			JourneyTransactionDetails journeyTransactionDetails1 =new JourneyTransactionDetails();
-
-			Integer businessSeats=flight.getBusinessSeats();
-			Integer nonBusinessSeats=flight.getNonBusinessSeats();
-
-
-			journeyTransactionDetails1.setBusinessSeatsAvailable(businessSeats-ticketBusinessCount);
-			journeyTransactionDetails1.setNonBusinessSeatsAvailable(nonBusinessSeats-ticketNonBusinessCount);
-			journeyTransactionDetails1.setJourneyId(bookingHeader.getJourneyId());
-			journeyTransactionDetails1.setJourneyDate(bookingHeader.getJourneyDate());
-
-			journeyTransactionDetailsRepo.save(journeyTransactionDetails1);
-		}
-
-		bookingHeader.setBookingStatus(2);
-		bookingHeader.setBookingDate(LocalDateTime.now());
-
-		BookingHeader header=bookingHeaderRepo.save(bookingHeader);
-
-
-		return header;
+		return headerList;
 	}
 	
-	public SummaryModel geSummary(Integer pnrNumber) {
+	public List<SummaryModel> getSummary(Integer pnrNumber) {
 		BookingHeader bookingHeader =bookingHeaderRepo.findByPnrNumberAndBookingStatus(pnrNumber,1);
+		List<SummaryModel> summaryModelList=new ArrayList<>();
 		SummaryModel summaryModel=new SummaryModel();
 		FinalAmount finalAmount= new FinalAmount();
 		List<PassangerModel> passangerModelList = new ArrayList<>(); 
@@ -413,16 +438,16 @@ public class FlightService {
 			
 			summaryModel.setAmount(finalAmount);
 			summaryModel.setPassangerList(passangerModelList);
+			summaryModelList.add(summaryModel);
 		}
-		return summaryModel;
+		return summaryModelList;
 	}
-	public void deletePassanger(Integer ticketId) {
+	
+	public void deletePassanger(Integer passangerId) {
 		
-		TicketDetails ticketDetails = ticketDetailsRepo.findByTicketId(ticketId);
+		List<TicketDetails> ticketsDetails = ticketDetailsRepo.updatePassangerId(passangerId);
+
 		
-		ticketDetails.setIsActive(0);
-		
-		ticketDetailsRepo.save(ticketDetails);
 		
 	}
 	public void cancelBooking(Integer pnrNumber) throws Exception {
@@ -445,7 +470,7 @@ public class FlightService {
 		}
 		
 	}
-	public List<HistoryModel> getHistoryByemailId(String emailIdOrPnr) {
+	public List<HistoryModel> getHistoryByemailIdOrPnr(String emailIdOrPnr) {
 		
 		
 		List<HistoryModel> historyList=new ArrayList<>();

@@ -3,8 +3,10 @@ package com.example.Repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import com.example.Entity.TicketDetails;
+import com.example.util.QueryConstants;
 
 public interface TicketDetailsRepository extends JpaRepository<TicketDetails, Integer>{
 
@@ -17,6 +19,9 @@ public interface TicketDetailsRepository extends JpaRepository<TicketDetails, In
 	TicketDetails findByTicketId(Integer ticketId);
 
 	List<TicketDetails> findByPnrNoAndClassNameAndIsActive(Integer pnrNumber, String classname, int i);
+
+	@Query(value=QueryConstants.DELETE_PASSANGER)
+	List<TicketDetails> updatePassangerId(Integer passangerId);
 
 	
 	

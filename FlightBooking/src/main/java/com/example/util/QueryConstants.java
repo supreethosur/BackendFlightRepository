@@ -12,5 +12,8 @@ public class QueryConstants {
 	 
 	public static final String  GET_CITIES= "select CONCAT(ct.cityName,' ; ',ct.StateName) from City ct where "
 			+ "ct.cityName like CONCAT(''',ct.cityName,'%'')";
+
+
+	public static final String DELETE_PASSANGER = " update TicketDetails td set td.isActive=0 where td.passangerId=:passangerId";
 	
 }
