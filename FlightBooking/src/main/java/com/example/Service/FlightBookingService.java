@@ -4,13 +4,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.example.Entity.BookingHeader;
-import com.example.Entity.Flight;
 import com.example.Entity.Journey;
 import com.example.Entity.JourneyTransactionDetails;
 import com.example.Entity.Passanger;
@@ -18,6 +21,7 @@ import com.example.Entity.Status;
 import com.example.Entity.TicketDetails;
 import com.example.Entity.UserDetails;
 import com.example.Model.FinalAmount;
+import com.example.Model.Flight;
 import com.example.Model.FlightModel;
 import com.example.Model.HistoryModel;
 import com.example.Model.JourneyInputModel;
@@ -28,7 +32,6 @@ import com.example.Model.SummaryModel;
 import com.example.Model.TicketModel;
 import com.example.Repository.BookingHeaderRepository;
 import com.example.Repository.CityRepository;
-import com.example.Repository.FlightsRepository;
 import com.example.Repository.JourneyRepository;
 import com.example.Repository.JourneyTransactionDetailsRepository;
 import com.example.Repository.PassengerRepository;
@@ -37,10 +40,10 @@ import com.example.Repository.TicketDetailsRepository;
 import com.example.Repository.UserDetailsRepository;
 
 @Service
-public class FlightService {
+public class FlightBookingService {
 
-	@Autowired
-	FlightsRepository flightRepo;
+//	@Autowired
+//	FlightsRepository flightRepo;
 
 	@Autowired
 	JourneyRepository journeyRepo;
@@ -65,48 +68,51 @@ public class FlightService {
 
 	@Autowired
 	StatusRepository statusRepo; 
+	
+	@Autowired
+	RestTemplate restTemplate;
 
 	//	@Cacheable(key ="#id",value = "flightStore")
-	public Flight findById(Integer id) throws Exception {
-		System.out.println("inside service");
-		Optional<Flight> flights = flightRepo.findById(id);
-		if(flights.isPresent()) {
-			return flights.get();
-		}else {
-			throw new Exception("No Flight with the flight Id " + id);
-		}
-	}
-	public FlightModel addFlight(FlightModel ipflight) throws Exception {
-		try {
-			Flight flight=addFlightDetails(ipflight);
-			ipflight.setFlightId(flight.getFlightId());
-			Journey journey=addJourneyDetails(ipflight);
-			ipflight.setJourneyId(journey.getJourneyId());
-
-			return ipflight;
-
-		}
-		catch(Exception e) {
-			throw new Exception("Something went wrong");
-		}
-	}
-
-	public Flight addFlightDetails(FlightModel ipflight) throws Exception {
-		try {
-			Flight flight=new Flight();
-			flight.setFlightName(ipflight.getFlightName());
-			flight.setBusinessSeats(ipflight.getBusinessSeats());
-			flight.setNonBusinessSeats(ipflight.getNonBusinessSeats());
-			flight.setScheduleType(ipflight.getScheduleType());
-			return flightRepo.save(flight);
-		}
-		catch(Exception e) {
-			throw new Exception("Something went wrong");
-		}
-	}
+//	public Flight findById(Integer id) throws Exception {
+//		System.out.println("inside service");
+//		Optional<Flight> flights = flightRepo.findById(id);
+//		if(flights.isPresent()) {
+//			return flights.get();
+//		}else {
+//			throw new Exception("No Flight with the flight Id " + id);
+//		}
+//	}
+//	public FlightModel addFlight(FlightModel ipflight) throws Exception {
+//		try {
+//			Flight flight=addFlightDetails(ipflight);
+//			ipflight.setFlightId(flight.getFlightId());
+//			Journey journey=addJourneyDetails(ipflight);
+//			ipflight.setJourneyId(journey.getJourneyId());
+//
+//			return ipflight;
+//
+//		}
+//		catch(Exception e) {
+//			throw new Exception("Something went wrong");
+//		}
+//	}
+//
+//	public Flight addFlightDetails(FlightModel ipflight) throws Exception {
+//		try {
+//			Flight flight=new Flight();
+//			flight.setFlightName(ipflight.getFlightName());
+//			flight.setBusinessSeats(ipflight.getBusinessSeats());
+//			flight.setNonBusinessSeats(ipflight.getNonBusinessSeats());
+//			flight.setScheduleType(ipflight.getScheduleType());
+//			return flightRepo.save(flight);
+//		}
+//		catch(Exception e) {
+//			throw new Exception("Something went wrong");
+//		}
+//	}
 
 	public Journey addJourneyDetails(FlightModel ipflight) throws Exception {
-		try { 
+		try {
 			Journey journey=new Journey();
 			journey.setFlightId(ipflight.getFlightId());
 			journey.setFromLocation(ipflight.getFromLocation());
@@ -123,41 +129,44 @@ public class FlightService {
 	}
 
 	//	@CacheEvict(key ="#id",value = "flightStore")
-	public void deleteById(Integer id) throws Exception {
-		try {
-			flightRepo.deleteByFlightId(id);	
-		}
-		catch(Exception e) { 
-			throw new Exception("Something went wrong while deleting");
-		}
-	}
+//	public void deleteById(Integer id) throws Exception {
+//		try {
+//			Flight flight=flightRepo.findByFlightId(id);
+//			flight.setIsActive(0);
+//			flightRepo.save(flight);	
+//		}
+//		catch(Exception e) { 
+//			throw new Exception("Something went wrong while deleting");
+//		}
+//	}
 
 	//	@CachePut(key ="#id",value = "flightStore")
-	public FlightModel updateFlight( FlightModel flight) throws Exception {
-		Flight flights = flightRepo.findByFlightId(flight.getFlightId());
-		if(flights!=null) {
-			flights.setFlightName(flight.getFlightName());
-			flights.setBusinessSeats(flight.getBusinessSeats());
-			flights.setNonBusinessSeats(flight.getNonBusinessSeats());
-			flights.setScheduleType(flight.getScheduleType());
-			flightRepo.save(flights);
-
-			Journey journey=journeyRepo.findByJourneyId(flight.getJourneyId());
-			if(journey!=null) {
-				journey.setFlightId(flight.getFlightId());
-				journey.setFromLocation(flight.getFromLocation());
-				journey.setToLocation(flight.getToLocation());
-				journey.setArrivalTime(flight.getArrivalTime());
-				journey.setDepartureTime(flight.getDepartureTime());
-				journeyRepo.save(journey);	
-			}
-
-			return flight;
-		}else {
-			throw new Exception("No Flight with the flight Id " + flight.getFlightId());
-		} 
-
-	}
+//	public FlightModel updateFlight( FlightModel flight) throws Exception {
+//		Flight flights = flightRepo.findByFlightId(flight.getFlightId());
+//		if(flights!=null) {
+//			flights.setFlightName(flight.getFlightName());
+//			flights.setBusinessSeats(flight.getBusinessSeats());
+//			flights.setNonBusinessSeats(flight.getNonBusinessSeats());
+//			flights.setScheduleType(flight.getScheduleType());
+//			flights.setAirline(flight.getAirline());
+//			flightRepo.save(flights);
+//
+//			Journey journey=journeyRepo.findByJourneyId(flight.getJourneyId());
+//			if(journey!=null) {
+//				journey.setFlightId(flight.getFlightId());
+//				journey.setFromLocation(flight.getFromLocation());
+//				journey.setToLocation(flight.getToLocation());
+//				journey.setArrivalTime(flight.getArrivalTime());
+//				journey.setDepartureTime(flight.getDepartureTime());
+//				journeyRepo.save(journey);	
+//			}
+//
+//			return flight;
+//		}else {
+//			throw new Exception("No Flight with the flight Id " + flight.getFlightId());
+//		} 
+//
+//	}
 
 
 	public HashMap<String , List<FlightModel>> searchFlight( SearchFlightModel searchModel){
@@ -173,7 +182,15 @@ public class FlightService {
 		else {
 			scheduleType="WD";
 		}
-		List<Flight> flight1 = flightRepo.findFlights(scheduleType);
+		String url="http://localhost:8085/Flight/scheduleType/"+scheduleType;
+		
+		ParameterizedTypeReference<List<Flight>> responseType= new ParameterizedTypeReference<List<Flight>>() {
+		};
+		
+		HttpEntity<?> httpEntity=new HttpEntity(null,null);
+		ResponseEntity<List<Flight>> res=restTemplate.exchange(url, HttpMethod.GET, httpEntity, responseType);
+		
+		List<Flight> flight1 = res.getBody();
 		for (Flight flight : flight1) {
 			List<Journey> journey1= journeyRepo.getJourney(flight.getFlightId(),searchModel.getFromPlace().split(";")[0].trim(),searchModel.getToPlace().split(";")[0].trim());
 
@@ -214,7 +231,15 @@ public class FlightService {
 			else {
 				scheduleType="WD";
 			}
-			List<Flight> flight2 = flightRepo.findFlights(scheduleType);
+			
+			String url1="http://localhost:8085/Flight/scheduleType/"+scheduleType;
+			
+			ParameterizedTypeReference<List<Flight>> responseType1= new ParameterizedTypeReference<List<Flight>>() {
+			};
+			
+			HttpEntity<?> httpEntity1=new HttpEntity(null,null);
+			ResponseEntity<List<Flight>> res1=restTemplate.exchange(url1, HttpMethod.GET, httpEntity1, responseType1);
+			List<Flight> flight2 = res1.getBody();
 			for (Flight flight : flight2) {
 				List<Journey> journey2= journeyRepo.getJourney(flight.getFlightId(),searchModel.getToPlace().split(";")[0].trim(),searchModel.getFromPlace().split(";")[0].trim() );
 				for (Journey journey : journey2) {
@@ -366,7 +391,19 @@ public class FlightService {
 			}
 			else {
 				Journey journey=journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
-				Flight flight=flightRepo.findByFlightId(journey.getFlightId());
+				
+				
+				String url1="http://localhost:8085/Flight/"+journey.getFlightId();
+				
+				ParameterizedTypeReference<Flight> responseType1= new ParameterizedTypeReference<Flight>() {
+				};
+				
+				HttpEntity<?> httpEntity1=new HttpEntity(null,null);
+				ResponseEntity<Flight> res1=restTemplate.exchange(url1, HttpMethod.GET, httpEntity1, responseType1);
+				
+				Flight flight=res1.getBody();
+				
+				
 				JourneyTransactionDetails journeyTransactionDetails1 =new JourneyTransactionDetails();
 
 				Integer businessSeats=flight.getBusinessSeats();
@@ -447,8 +484,6 @@ public class FlightService {
 		
 		List<TicketDetails> ticketsDetails = ticketDetailsRepo.updatePassangerId(passangerId);
 
-		
-		
 	}
 	public void cancelBooking(Integer pnrNumber) throws Exception {
 		LocalDateTime currentDateTime=LocalDateTime.now();
@@ -511,7 +546,7 @@ public class FlightService {
 				
 				ticketList.add(ticketModel);
 			}
-			Status status= statusRepo.findbyStatusId(bookingHeader.getBookingStatus());
+			Status status= statusRepo.findByStatusId(bookingHeader.getBookingStatus());
 			
 			model.setPnrNo(bookingHeader.getPnrNumber());
 			model.setStatus(status.getStatusDescription());
@@ -533,6 +568,21 @@ public class FlightService {
 	        return false;
 	    }
 	    return true;
+	}
+
+	public Journey updateJourneyDetails(FlightModel flight) {
+		Journey journey=journeyRepo.findByJourneyId(flight.getJourneyId());
+		Journey journey1=new Journey();
+		if(journey!=null) {
+			journey.setFlightId(flight.getFlightId());
+			journey.setFromLocation(flight.getFromLocation());
+			journey.setToLocation(flight.getToLocation());
+			journey.setArrivalTime(flight.getArrivalTime());
+			journey.setDepartureTime(flight.getDepartureTime());
+			journey1=journeyRepo.save(journey);	
+			
+		}
+		return journey1;
 	}
 
 

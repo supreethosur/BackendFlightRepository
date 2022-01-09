@@ -16,7 +16,7 @@ public interface TicketDetailsRepository extends JpaRepository<TicketDetails, In
 
 	List<TicketDetails> findByPnrNoAndIsActive(Integer pnrNumber, int i);
 
-	TicketDetails findByTicketId(Integer ticketId);
+	TicketDetails findByTicketNo(Integer ticketId);
 
 	List<TicketDetails> findByPnrNoAndClassNameAndIsActive(Integer pnrNumber, String classname, int i);
 
