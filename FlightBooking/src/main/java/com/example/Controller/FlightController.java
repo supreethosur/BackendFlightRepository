@@ -13,9 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.Entity.BookingHeader;
 import com.example.Entity.Flight;
+import com.example.Entity.TicketDetails;
+import com.example.Entity.UserDetails;
 import com.example.Model.FlightModel;
+import com.example.Model.HistoryModel;
 import com.example.Model.PassangerModel;
 import com.example.Model.ProceedBookingModel;
+import com.example.Model.SummaryModel;
 import com.example.Service.FlightService;
 
 @RestController
@@ -57,8 +61,9 @@ FlightService flightService;
 	}
 	
 	@PostMapping("/addPassanger")
-	public void addPassanger(@RequestBody PassangerModel passangerModel) {
-		flightService.addPassanger(passangerModel);
+	public TicketDetails addPassanger(@RequestBody PassangerModel passangerModel) {
+		TicketDetails ticket = flightService.addPassanger(passangerModel);
+		return ticket;
 	}
 	
 	
@@ -72,5 +77,25 @@ FlightService flightService;
 		return flightService.finalSubmission(pnrNumber);
 	}
 	
+	@GetMapping("/getSummary")
+	public SummaryModel getSummary(Integer pnrNumber)  {
+		return flightService.geSummary(pnrNumber);
+	}
+	
+	@PostMapping("/deletePassanger")
+	public void deletePassanger(Integer TicketId) throws Exception {
+		 flightService.deletePassanger(TicketId);
+	}
+	
+	 
+	@PostMapping("/cancelBooking")
+	public void cancelBooking(Integer pnrNumber) throws Exception {
+		 flightService.cancelBooking(pnrNumber);
+	}
+	
+	@GetMapping("/getHistoryByemailId")
+	public List<HistoryModel> getHistoryByemailId(String emailId)  {
+		return flightService.getHistoryByemailId(emailId);
+	}
 	
 }

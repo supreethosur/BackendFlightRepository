@@ -19,8 +19,14 @@ public class BookingHeader {
 	private Integer userId;
 	private LocalDateTime bookingDate;
 	private LocalDate journeyDate;
+	private double finalAmount;
 	
-	
+	public double getFinalAmount() {
+		return finalAmount;
+	}
+	public void setFinalAmount(double finalAmount) {
+		this.finalAmount = finalAmount;
+	}
 	public LocalDate getJourneyDate() {
 		return journeyDate;
 	}

@@ -10,8 +10,14 @@ public class PassangerModel {
 	private String mealsType;
 	private Integer pnrNumber;
 	private boolean isBusinessClass;
+	private double amount;
 	
-	
+	public double getAmount() {
+		return amount;
+	}
+	public void setAmount(double amount) {
+		this.amount = amount;
+	}
 	public boolean isBusinessClass() {
 		return isBusinessClass;
 	}

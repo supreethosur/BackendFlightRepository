@@ -16,9 +16,15 @@ public class TicketDetails {
 	private String optedMeals;
 	private Double amount;
 	private String className;
+	private Integer isActive;
 	
 	
-	
+	public Integer getIsActive() {
+		return isActive;
+	}
+	public void setIsActive(Integer isActive) {
+		this.isActive = isActive;
+	}
 	public String getClassName() {
 		return className;
 	}

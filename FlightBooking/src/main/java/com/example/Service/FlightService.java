@@ -1,4 +1,5 @@
 package com.example.Service;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,18 +14,26 @@ import com.example.Entity.Flight;
 import com.example.Entity.Journey;
 import com.example.Entity.JourneyTransactionDetails;
 import com.example.Entity.Passanger;
+import com.example.Entity.Status;
 import com.example.Entity.TicketDetails;
+import com.example.Entity.UserDetails;
+import com.example.Model.FinalAmount;
 import com.example.Model.FlightModel;
+import com.example.Model.HistoryModel;
 import com.example.Model.PassangerModel;
 import com.example.Model.ProceedBookingModel;
 import com.example.Model.SearchFlightModel;
+import com.example.Model.SummaryModel;
+import com.example.Model.TicketModel;
 import com.example.Repository.BookingHeaderRepository;
 import com.example.Repository.CityRepository;
 import com.example.Repository.FlightsRepository;
 import com.example.Repository.JourneyRepository;
 import com.example.Repository.JourneyTransactionDetailsRepository;
 import com.example.Repository.PassengerRepository;
+import com.example.Repository.StatusRepository;
 import com.example.Repository.TicketDetailsRepository;
+import com.example.Repository.UserDetailsRepository;
 
 @Service
 public class FlightService {
@@ -49,7 +58,12 @@ public class FlightService {
 
 	@Autowired
 	TicketDetailsRepository ticketDetailsRepo;
+	
+	@Autowired
+	UserDetailsRepository userDetailsRepo;
 
+	@Autowired
+	StatusRepository statusRepo; 
 
 	//	@Cacheable(key ="#id",value = "flightStore")
 	public Flight findById(Integer id) throws Exception {
@@ -120,7 +134,7 @@ public class FlightService {
 	//	@CachePut(key ="#id",value = "flightStore")
 	public FlightModel updateFlight( FlightModel flight) throws Exception {
 		Flight flights = flightRepo.findByFlightId(flight.getFlightId());
-		if(flights!=null) { 
+		if(flights!=null) {
 			flights.setFlightName(flight.getFlightName());
 			flights.setBusinessSeats(flight.getBusinessSeats());
 			flights.setNonBusinessSeats(flight.getNonBusinessSeats());
@@ -241,7 +255,7 @@ public class FlightService {
 		List<String> cities=cityRepo.findCityNameByCityNameStartswith(cityName);
 		return cities;
 	}
-	public void addPassanger(PassangerModel passangerModel) {
+	public TicketDetails addPassanger(PassangerModel passangerModel) {
 
 		Passanger passanger =new Passanger();
 
@@ -265,8 +279,11 @@ public class FlightService {
 		ticket.setAmount(amount);
 		ticket.setOptedMeals(passangerModel.getMealsType());
 		ticket.setPnrNo(passangerModel.getPnrNumber());
+		ticket.setIsActive(1);
 		TicketDetails addedticket =ticketDetailsRepo.save(ticket);
 
+		return addedticket;
+		
 
 	}
 	public BookingHeader proceedWithBooking(ProceedBookingModel model) {
@@ -284,8 +301,8 @@ public class FlightService {
 
 	public BookingHeader finalSubmission(Integer pnrNumber) throws Exception {
 
-		List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassName(pnrNumber,"Non-Business");
-		List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassName(pnrNumber,"Business");
+		List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Non-Business",1);
+		List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Business",1);
 		BookingHeader bookingHeader=bookingHeaderRepo.findByPnrNumber(pnrNumber);
 		JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(bookingHeader.getJourneyId(),bookingHeader.getJourneyDate());
 		Integer ticketBusinessCount=0;
@@ -348,9 +365,150 @@ public class FlightService {
 
 		return header;
 	}
+	
+	public SummaryModel geSummary(Integer pnrNumber) {
+		BookingHeader bookingHeader =bookingHeaderRepo.findByPnrNumberAndBookingStatus(pnrNumber,1);
+		SummaryModel summaryModel=new SummaryModel();
+		FinalAmount finalAmount= new FinalAmount();
+		List<PassangerModel> passangerModelList = new ArrayList<>(); 
+		double amount = 0.0;
+		if(bookingHeader!=null) {
+			List<TicketDetails>  ticketDetails=ticketDetailsRepo.findByPnrNoAndIsActive(pnrNumber,1);
+			for (TicketDetails ticketDetails2 : ticketDetails) {
+				
+				amount+=ticketDetails2.getAmount();
+				PassangerModel passangerModel =new PassangerModel();
+				Passanger passanger=passangerRepo.findByPassengerId(ticketDetails2.getPassangerId());
+				
+				passangerModel.setAge(passanger.getAge());
+				passangerModel.setAmount(ticketDetails2.getAmount());
+				
+				if(ticketDetails2.getClassName().equals("Non-Business")) {
+					passangerModel.setBusinessClass(false);
+				}
+				else {
+					passangerModel.setBusinessClass(true);
+				}
+				passangerModel.setGender(passanger.getGender());
+				passangerModel.setMealsType(ticketDetails2.getOptedMeals());
+				passangerModel.setPassangeName(passanger.getPassangerName());
+				passangerModel.setPnrNumber(pnrNumber);
+				passangerModel.setUserId(bookingHeader.getUserId());
+				
+				passangerModelList.add(passangerModel);
+			}
+			
+			double taxAmount=(12.0/100)*amount;
+			double serviceCharge = ticketDetails.size() * 10 ;
+			
+			bookingHeader.setFinalAmount(amount+taxAmount+serviceCharge);
+			bookingHeaderRepo.save(bookingHeader);
+			
+			
+			finalAmount.setTaxPercentage(12.0);
+			finalAmount.setTotalTicketAmount(amount);
+			finalAmount.setServiceCharges(serviceCharge);
+			finalAmount.setTaxAmount(taxAmount);
+			finalAmount.setFinalAmount(amount+taxAmount+serviceCharge);
+			
+			summaryModel.setAmount(finalAmount);
+			summaryModel.setPassangerList(passangerModelList);
+		}
+		return summaryModel;
+	}
+	public void deletePassanger(Integer ticketId) {
+		
+		TicketDetails ticketDetails = ticketDetailsRepo.findByTicketId(ticketId);
+		
+		ticketDetails.setIsActive(0);
+		
+		ticketDetailsRepo.save(ticketDetails);
+		
+	}
+	public void cancelBooking(Integer pnrNumber) throws Exception {
+		LocalDateTime currentDateTime=LocalDateTime.now();
+		
+		
+		BookingHeader header=bookingHeaderRepo.findByPnrNumber(pnrNumber);
+		if(header!=null) {
+			LocalDate journeyDate= header.getJourneyDate();
+			Journey journey = journeyRepo.findByJourneyId(header.getJourneyId());
+			LocalDateTime journeyDateTime = LocalDateTime.of(journeyDate, journey.getDepartureTime());
+			if( currentDateTime.isAfter(journeyDateTime.minusHours(24))) {
+				throw new Exception("Ticket cannot be cancelled before 24 hours of journey date");	
+			}
+			else {
+				header.setBookingStatus(3);
+				
+				bookingHeaderRepo.save(header);
+			}
+		}
+		
+	}
+	public List<HistoryModel> getHistoryByemailId(String emailIdOrPnr) {
+		
+		
+		List<HistoryModel> historyList=new ArrayList<>();
+		List<BookingHeader> bookingHeaders =new ArrayList<>();
+		boolean check=isStringInteger(emailIdOrPnr);
+		if(check) {
+			BookingHeader bookingHeader2 = bookingHeaderRepo.findByPnrNumber(Integer.parseInt(emailIdOrPnr));
+			bookingHeaders.add(bookingHeader2);
+		}
+		else {
+			UserDetails user=userDetailsRepo.findByUserMailId(emailIdOrPnr);
+			bookingHeaders = bookingHeaderRepo.findByUserId(user.getUserId());
+		}
+		
+		List<TicketModel> ticketList=new ArrayList<>();
+		for (BookingHeader bookingHeader : bookingHeaders) {
+			HistoryModel model=new HistoryModel();
+			
+			Journey journey = journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
+			List<TicketDetails> tickets=ticketDetailsRepo.findByPnrNo(bookingHeader.getPnrNumber());
+			for (TicketDetails ticket : tickets) {
+				TicketModel ticketModel=new TicketModel();
+				Passanger passanger=passangerRepo.findByPassengerId(ticket.getPassangerId());
+				
+				ticketModel.setAge(passanger.getAge());
+				ticketModel.setAmount(ticket.getAmount());
+				if(ticket.getClassName().equals("Non-Business")) {
+					ticketModel.setBusinessClass(false);
+				}
+				else {
+					ticketModel.setBusinessClass(true);
+				}
+				ticketModel.setGender(passanger.getGender());
+				ticketModel.setMealsType(ticket.getOptedMeals());
+				ticketModel.setPassangeName(passanger.getPassangerName());
+				ticketModel.setJourneyDate(LocalDateTime.of(bookingHeader.getJourneyDate(), journey.getDepartureTime()));
+				ticketModel.setFromToLocation(journey.getFromLocation() +" - "+ journey.getToLocation());
+				
+				ticketList.add(ticketModel);
+			}
+			Status status= statusRepo.findbyStatusId(bookingHeader.getBookingStatus());
+			
+			model.setPnrNo(bookingHeader.getPnrNumber());
+			model.setStatus(status.getStatusDescription());
+			model.setTickets(ticketList);
+			
+			historyList.add(model);
+		}
+		
+		
+		
+		return historyList;
+	}
 
 
-
+	public static boolean isStringInteger(String number ){
+	    try{
+	        Integer.parseInt(number);
+	    }catch(Exception e ){
+	        return false;
+	    }
+	    return true;
+	}
 
 
 
