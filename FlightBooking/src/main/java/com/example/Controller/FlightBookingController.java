@@ -3,6 +3,7 @@ package com.example.Controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,11 +11,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Advice.CustomException;
 import com.example.Entity.BookingHeader;
 import com.example.Entity.Journey;
 import com.example.Entity.TicketDetails;
 import com.example.Model.FlightModel;
 import com.example.Model.HistoryModel;
+import com.example.Model.NotificationModel;
 import com.example.Model.PassangerModel;
 import com.example.Model.ProceedBookingModel;
 import com.example.Model.SummaryModel;
@@ -25,13 +28,17 @@ public class FlightBookingController {
 
 	@Autowired
 	FlightBookingService flightService;
+	
+	@Autowired
+	private KafkaTemplate<String, NotificationModel> kafkaTemplate;
+	
+	private static final String TOPIC = "new_kafkaTopic";
 
-//		@GetMapping("/{Id}")
-//		public  Flight  getFlightsById(@PathVariable Integer Id) throws Exception {
-//			System.out.println("inside Controller");
-//			Flight flights = flightService.findById(Id);	 
-//			return flights;
-//		}
+		@GetMapping("/test/{Id}")
+		public  String  getFlightsById(@PathVariable Integer Id) throws Exception {
+			System.out.println("inside Controller");
+			return "Hello";
+		}
 
 	//	@PostMapping("/addFlights")
 	//	public FlightModel addFlights(@RequestBody FlightModel ipflight) throws Exception {
@@ -68,6 +75,13 @@ public class FlightBookingController {
 		List<String> cities = flightService.getCities(cityName);
 		return cities;
 	}
+	
+	@GetMapping("/getJourneyByFlightId/{flightId}")
+	public List<Journey> getJourneyByFlightId(@PathVariable Integer flightId) {
+		List<Journey> journey = flightService.getjourney(flightId);
+		return journey;
+	}
+	
 
 	@PostMapping("/addPassanger")
 	public List<TicketDetails> addPassanger(@RequestBody List<PassangerModel> passangerModel) {
@@ -82,7 +96,7 @@ public class FlightBookingController {
 	}
 
 	@PostMapping("/finalSubmission")
-	public List<BookingHeader> finalSubmission(List<Integer> pnrNumber) throws Exception {
+	public List<BookingHeader> finalSubmission(List<Integer> pnrNumber) throws CustomException {
 		return flightService.finalSubmission(pnrNumber);
 	}
 
@@ -106,5 +120,15 @@ public class FlightBookingController {
 	public List<HistoryModel> getHistoryByemailId(String emailId)  {
 		return flightService.getHistoryByemailIdOrPnr(emailId);
 	}
+	
+//	@GetMapping("/publish")
+//	public String publishBook() {
+//
+//	    kafkaTemplate.send(TOPIC, new NotificationModel("Hello"));
+//
+//	    return "Published successfully";
+//	}
+	
+	
 
 }

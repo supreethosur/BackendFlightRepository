@@ -14,4 +14,9 @@ class GlobalExceptionHandler {
 		return new ResponseEntity<String>(e.getMessage(),HttpStatus.OK);
 	}
 
+	@ExceptionHandler(CustomException.class)
+	public ResponseEntity<String> handleException(CustomException e){
+		e.printStackTrace();
+		return new ResponseEntity<String>(e.getMessage(),HttpStatus.OK);
+	}
 }

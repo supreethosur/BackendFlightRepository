@@ -15,4 +15,6 @@ public interface JourneyRepository extends JpaRepository<Journey, Integer>{
 	@Query(value=QueryConstants.GET_JOURNEY)
 	List<Journey> getJourney(Integer flightId, String fromLocation, String toLocation);
 
+	List<Journey> findByFlightId(Integer flightId);
+
 }

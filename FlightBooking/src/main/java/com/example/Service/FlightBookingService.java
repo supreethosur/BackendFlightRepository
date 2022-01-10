@@ -10,9 +10,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.Advice.CustomException;
 import com.example.Entity.BookingHeader;
 import com.example.Entity.Journey;
 import com.example.Entity.JourneyTransactionDetails;
@@ -25,6 +27,7 @@ import com.example.Model.Flight;
 import com.example.Model.FlightModel;
 import com.example.Model.HistoryModel;
 import com.example.Model.JourneyInputModel;
+import com.example.Model.NotificationModel;
 import com.example.Model.PassangerModel;
 import com.example.Model.ProceedBookingModel;
 import com.example.Model.SearchFlightModel;
@@ -71,6 +74,11 @@ public class FlightBookingService {
 	
 	@Autowired
 	RestTemplate restTemplate;
+	
+	@Autowired
+	private KafkaTemplate<String, NotificationModel> kafkaTemplate;
+	
+	private static final String TOPIC = "new_kafkaTopic";
 
 	//	@Cacheable(key ="#id",value = "flightStore")
 //	public Flight findById(Integer id) throws Exception {
@@ -112,7 +120,6 @@ public class FlightBookingService {
 //	}
 
 	public Journey addJourneyDetails(FlightModel ipflight) throws Exception {
-		try {
 			Journey journey=new Journey();
 			journey.setFlightId(ipflight.getFlightId());
 			journey.setFromLocation(ipflight.getFromLocation());
@@ -122,10 +129,7 @@ public class FlightBookingService {
 
 			return journeyRepo.save(journey);
 
-		}
-		catch(Exception e) {
-			throw new Exception("Something went wrong");
-		}
+		
 	}
 
 	//	@CacheEvict(key ="#id",value = "flightStore")
@@ -347,12 +351,14 @@ public class FlightBookingService {
 	}
 
 
-	public List<BookingHeader> finalSubmission(List<Integer> pnrNumberList) throws Exception {
+	public List<BookingHeader> finalSubmission(List<Integer> pnrNumberList) throws CustomException {
 		List<BookingHeader> headerList =new ArrayList<>();
+		Integer userId;
 		for (Integer pnrNumber : pnrNumberList) {
 			List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Non-Business",1);
 			List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Business",1);
 			BookingHeader bookingHeader=bookingHeaderRepo.findByPnrNumber(pnrNumber);
+			userId=bookingHeader.getUserId();
 			JourneyTransactionDetails journeyTransactionDetails =journeyTransactionDetailsRepo.findByJourneyIdAndJourneyDate(bookingHeader.getJourneyId(),bookingHeader.getJourneyDate());
 			Integer ticketBusinessCount=0;
 			Integer ticketNonBusinessCount=0;
@@ -375,13 +381,13 @@ public class FlightBookingService {
 				}
 
 				if( businessSeatsAvailable < ticketBusinessCount) {
-					throw new Exception("Please reduce the number of business class tickets or check with other flights");
+					throw new CustomException("Please reduce the number of business class tickets or check with other flights");
 				}
 				else {
 					journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getBusinessSeatsAvailable()-ticketBusinessCount);
 				}
 				if( nonBusinessSeatsAvailable < ticketNonBusinessCount) {
-					throw new Exception("Please reduce the number of non business class tickets or check with other flights");
+					throw new CustomException("Please reduce the number of non business class tickets or check with other flights");
 				}
 				else {
 					journeyTransactionDetails.setBusinessSeatsAvailable(journeyTransactionDetails.getNonBusinessSeatsAvailable()-ticketNonBusinessCount);
@@ -423,7 +429,17 @@ public class FlightBookingService {
 			
 			BookingHeader header=bookingHeaderRepo.save(bookingHeader);
 			headerList.add(header);
+			NotificationModel model=new NotificationModel();
+			
+			String message= "Pnr No Generated -"+pnrNumber;
+			model.setMessage(message);
+			model.setSubject("Congrats the ticket is booked");
+			model.setTimeOfEvent(LocalDateTime.now());
+			model.setUserId(userId);
+			
+			 kafkaTemplate.send(TOPIC, model);
 		}
+		
 		return headerList;
 	}
 	
@@ -583,6 +599,11 @@ public class FlightBookingService {
 			
 		}
 		return journey1;
+	}
+
+	public List<Journey> getjourney(Integer flightId) {
+		List<Journey> journey =journeyRepo.findByFlightId(flightId);
+ 		return journey;
 	}
 
 
