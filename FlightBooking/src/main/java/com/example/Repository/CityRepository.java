@@ -10,8 +10,10 @@ import com.example.util.QueryConstants;
 
 public interface CityRepository extends JpaRepository<City,Integer>{
 
-	@Query(value=QueryConstants.GET_CITIES)
-	List<String> findCityNameByCityNameStartswith(String cityName);
+//	@Query(value=QueryConstants.GET_CITIES)
+//	List<String> findCityNameByCityNameStartsWith(String cityName);
+
+	List<City> findByCityNameStartsWith(String cityName);
 
 	
 	        

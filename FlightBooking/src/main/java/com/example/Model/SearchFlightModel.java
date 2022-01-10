@@ -9,7 +9,7 @@ public class SearchFlightModel {
 	private LocalDate travelReturnDate;
 	private String fromPlace;
 	private String toPlace;
-	private boolean isRoundTrip;
+	private boolean isOneWayTrip;
 	
 	
 	public LocalDate getTravelStartDate() {
@@ -38,12 +38,13 @@ public class SearchFlightModel {
 	public void setToPlace(String toPlace) {
 		this.toPlace = toPlace;
 	}
-	public boolean isRoundTrip() {
-		return isRoundTrip;
+	public boolean isOneWayTrip() {
+		return isOneWayTrip;
 	}
-	public void setRoundTrip(boolean isRoundTrip) {
-		this.isRoundTrip = isRoundTrip;
+	public void setOneWayTrip(boolean isOneWayTrip) {
+		this.isOneWayTrip = isOneWayTrip;
 	}
+	
 	
 	
 }

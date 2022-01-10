@@ -1,5 +1,6 @@
 package com.example.Controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import com.example.Model.HistoryModel;
 import com.example.Model.NotificationModel;
 import com.example.Model.PassangerModel;
 import com.example.Model.ProceedBookingModel;
+import com.example.Model.SearchFlightModel;
 import com.example.Model.SummaryModel;
 import com.example.Service.FlightBookingService;
 
@@ -59,19 +61,19 @@ public class FlightBookingController {
 	//	}
 
 	@PutMapping("/updateJourney")
-	public void updateJourney(@RequestBody FlightModel flightJourney) throws Exception {
-		flightService.updateJourneyDetails(flightJourney);
-		
+	public Journey updateJourney(@RequestBody FlightModel flightJourney) throws Exception {
+		Journey journey = flightService.updateJourneyDetails(flightJourney);
+		return journey;
 	}
 	@PostMapping("/addJourney")
 		public Journey addFlights(@RequestBody FlightModel ipflight) throws Exception {
-			
+			System.out.println(490);
 			return flightService.addJourneyDetails(ipflight);
 		}
 
 
 	@GetMapping("/getCityStartsWith/{city}")
-	public List<String> getCityStartsWith(@PathVariable String cityName) {
+	public List<String> getCityStartsWith(@PathVariable("city") String cityName) {
 		List<String> cities = flightService.getCities(cityName);
 		return cities;
 	}
@@ -91,12 +93,12 @@ public class FlightBookingController {
 
 
 	@PostMapping("/proceedWithFlight")
-	public List<BookingHeader> proceedWithBooking(ProceedBookingModel model) {
+	public List<BookingHeader> proceedWithBooking(@RequestBody ProceedBookingModel model) {
 		return flightService.proceedWithBooking(model);
 	}
 
 	@PostMapping("/finalSubmission")
-	public List<BookingHeader> finalSubmission(List<Integer> pnrNumber) throws CustomException {
+	public List<BookingHeader> finalSubmission(@RequestBody List<Integer> pnrNumber) throws CustomException {
 		return flightService.finalSubmission(pnrNumber);
 	}
 
@@ -119,6 +121,13 @@ public class FlightBookingController {
 	@GetMapping("/getHistoryByemailId")
 	public List<HistoryModel> getHistoryByemailId(String emailId)  {
 		return flightService.getHistoryByemailIdOrPnr(emailId);
+	}
+	
+	
+	@PostMapping("/searchFlight")
+	public HashMap<String, List<FlightModel>> searchFlight(@RequestBody SearchFlightModel searchModel)  {
+		System.out.println(13143);
+		return flightService.searchFlight(searchModel);
 	}
 	
 //	@GetMapping("/publish")

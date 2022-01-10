@@ -1,9 +1,12 @@
 package com.example.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.Advice.CustomException;
 import com.example.Entity.BookingHeader;
+import com.example.Entity.City;
 import com.example.Entity.Journey;
 import com.example.Entity.JourneyTransactionDetails;
 import com.example.Entity.Passanger;
@@ -120,12 +124,16 @@ public class FlightBookingService {
 //	}
 
 	public Journey addJourneyDetails(FlightModel ipflight) throws Exception {
+		System.out.println("abcdef");
 			Journey journey=new Journey();
 			journey.setFlightId(ipflight.getFlightId());
 			journey.setFromLocation(ipflight.getFromLocation());
 			journey.setToLocation(ipflight.getToLocation());
-			journey.setArrivalTime(ipflight.getArrivalTime());
-			journey.setDepartureTime(ipflight.getDepartureTime());
+			journey.setAmount(ipflight.getAmount());
+			journey.setArrivalTime(LocalTime.parse(ipflight.getDepartureTime(), DateTimeFormatter.ofPattern("HH.mm.ss")));
+//			journey.setArrivalTime(ipflight.getArrivalTime());
+//			journey.setDepartureTime(ipflight.getDepartureTime());
+			journey.setDepartureTime(LocalTime.parse(ipflight.getDepartureTime(), DateTimeFormatter.ofPattern("HH.mm.ss")));
 
 			return journeyRepo.save(journey);
 
@@ -213,9 +221,9 @@ public class FlightBookingService {
 				flightModel.setJourneyId(journey.getJourneyId());
 				flightModel.setAirline(flight.getAirline());
 				flightModel.setArrivalDate(searchModel.getTravelStartDate());
-				flightModel.setArrivalTime(journey.getArrivalTime());
+				flightModel.setArrivalTime(journey.getArrivalTime().toString());
 				flightModel.setDepartureDate(searchModel.getTravelStartDate());
-				flightModel.setDepartureTime(journey.getDepartureTime());
+				flightModel.setDepartureTime(journey.getDepartureTime().toString());
 				flightModel.setFlightName(flight.getFlightName());
 				flightModel.setFromLocation(journey.getFromLocation());
 				flightModel.setToLocation(journey.getToLocation());
@@ -225,9 +233,10 @@ public class FlightBookingService {
 				flightModel.setAmount(journey.getAmount());
 				oneWayFlights.add(flightModel);
 			}
+			flightMapList.put("1", oneWayFlights);
 		}
-		flightMapList.put("1", oneWayFlights);
-		if (searchModel.isRoundTrip()) {
+		
+		if (!searchModel.isOneWayTrip()) {
 			day = searchModel.getTravelReturnDate().getDayOfWeek().toString();
 			if(day.equals("SUNDAY") || day.equals("SATURDAY") ) {
 				scheduleType="WE";
@@ -261,9 +270,9 @@ public class FlightBookingService {
 					flightModel.setJourneyId(journey.getJourneyId());
 					flightModel.setAirline(flight.getAirline());
 					flightModel.setArrivalDate(searchModel.getTravelReturnDate());
-					flightModel.setArrivalTime(journey.getArrivalTime());
+					flightModel.setArrivalTime(journey.getArrivalTime().toString());
 					flightModel.setDepartureDate(searchModel.getTravelReturnDate());
-					flightModel.setDepartureTime(journey.getDepartureTime());
+					flightModel.setDepartureTime(journey.getDepartureTime().toString());
 					flightModel.setFlightName(flight.getFlightName());
 					flightModel.setFromLocation(journey.getFromLocation());
 					flightModel.setToLocation(journey.getToLocation());
@@ -282,8 +291,9 @@ public class FlightBookingService {
 
 	public List<String> getCities(String cityName) {
 
-		List<String> cities=cityRepo.findCityNameByCityNameStartswith(cityName);
-		return cities;
+		List<City> cities=cityRepo.findByCityNameStartsWith(cityName);
+		List<String> cityNames=cities.stream().map(x->x.getCityName()).collect(Collectors.toList());
+		return cityNames;
 	}
 	
 	public List<TicketDetails> addPassanger(List<PassangerModel> passangerModelList) {
@@ -295,7 +305,7 @@ public class FlightBookingService {
 			passanger.setAge(passangerModel.getAge());
 			passanger.setAssociatedUserId(passangerModel.getUserId());
 			passanger.setGender(passangerModel.getGender());
-
+ 
 			Passanger addedpassanger = passangerRepo.save(passanger);
 
 			TicketDetails ticket = new TicketDetails();
@@ -307,20 +317,22 @@ public class FlightBookingService {
 				amount=amount*1.5;
 				className="Business";
 			}
+			ticket.setPassangerId(addedpassanger.getPassengerId());
 			ticket.setClassName(className);
 			ticket.setAmount(amount);
 			ticket.setOptedMeals(passangerModel.getMealsType());
 			ticket.setPnrNo(passangerModel.getPnrNumber());
 			ticket.setIsActive(1);
 			TicketDetails addedticket =ticketDetailsRepo.save(ticket);
-		
+			ticket.setTicketNo(addedticket.getTicketNo());
 			
-			ticketDetailsList.add(addedticket);
+			ticketDetailsList.add(ticket);
 		}
 		return ticketDetailsList;
 	}
 	
 	public List<BookingHeader> proceedWithBooking(ProceedBookingModel model) {
+		System.out.println(model.isOneWaytrip());
 		List<BookingHeader> bookingList =new ArrayList<>();
 		if(model.isOneWaytrip()) {
 			BookingHeader header =new BookingHeader();
@@ -355,6 +367,7 @@ public class FlightBookingService {
 		List<BookingHeader> headerList =new ArrayList<>();
 		Integer userId;
 		for (Integer pnrNumber : pnrNumberList) {
+			System.out.println(pnrNumber);
 			List<TicketDetails> ticketNonBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Non-Business",1);
 			List<TicketDetails> ticketBusiness=ticketDetailsRepo.findByPnrNoAndClassNameAndIsActive(pnrNumber,"Business",1);
 			BookingHeader bookingHeader=bookingHeaderRepo.findByPnrNumber(pnrNumber);
@@ -399,16 +412,16 @@ public class FlightBookingService {
 				Journey journey=journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
 				
 				
-				String url1="http://localhost:8085/Flight/"+journey.getFlightId();
-				
+				String url1="http://localhost:8082/"+journey.getFlightId();
+				System.out.println(url1);
 				ParameterizedTypeReference<Flight> responseType1= new ParameterizedTypeReference<Flight>() {
 				};
 				
 				HttpEntity<?> httpEntity1=new HttpEntity(null,null);
 				ResponseEntity<Flight> res1=restTemplate.exchange(url1, HttpMethod.GET, httpEntity1, responseType1);
-				
+//				ResponseEntity<Flight> res1=restTemplate.getForEntity(url1, Flight.class);
 				Flight flight=res1.getBody();
-				
+				System.out.println(url1);
 				
 				JourneyTransactionDetails journeyTransactionDetails1 =new JourneyTransactionDetails();
 
@@ -588,13 +601,19 @@ public class FlightBookingService {
 
 	public Journey updateJourneyDetails(FlightModel flight) {
 		Journey journey=journeyRepo.findByJourneyId(flight.getJourneyId());
+		System.out.println("qqqqqqqqqqq");
 		Journey journey1=new Journey();
 		if(journey!=null) {
 			journey.setFlightId(flight.getFlightId());
 			journey.setFromLocation(flight.getFromLocation());
 			journey.setToLocation(flight.getToLocation());
-			journey.setArrivalTime(flight.getArrivalTime());
-			journey.setDepartureTime(flight.getDepartureTime());
+			System.out.println(flight.getArrivalTime()+ "  oooo "+  DateTimeFormatter.ofPattern("HH.mm.ss") );
+			journey.setArrivalTime(LocalTime.parse(flight.getArrivalTime(), DateTimeFormatter.ofPattern("HH.mm.ss")));
+			System.out.println(2222222);
+			journey.setAmount(flight.getAmount());
+//			journey.setArrivalTime(flight.getArrivalTime());
+//			journey.setDepartureTime(flight.getDepartureTime());
+			journey.setDepartureTime(LocalTime.parse(flight.getDepartureTime(), DateTimeFormatter.ofPattern("HH.mm.ss")));
 			journey1=journeyRepo.save(journey);	
 			
 		}

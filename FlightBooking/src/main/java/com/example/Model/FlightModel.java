@@ -10,9 +10,9 @@ public class FlightModel {
 	private String flightName; 
 	private String airline;
 	private LocalDate departureDate;
-	private LocalTime departureTime;
+	private String departureTime;
 	private LocalDate arrivalDate;
-	private LocalTime arrivalTime;
+	private String arrivalTime;
 	private String fromLocation;
 	private String toLocation;
 	private Integer businessSeats;
@@ -33,12 +33,7 @@ public class FlightModel {
 	public void setArrivalDate(LocalDate arrivalDate) {
 		this.arrivalDate = arrivalDate;
 	}
-	public LocalTime getArrivalTime() {
-		return arrivalTime;
-	}
-	public void setArrivalTime(LocalTime arrivalTime) {
-		this.arrivalTime = arrivalTime;
-	}
+	
 	public String getFromLocation() {
 		return fromLocation;
 	}
@@ -81,11 +76,18 @@ public class FlightModel {
 	public void setDepartureDate(LocalDate departureDate) {
 		this.departureDate = departureDate;
 	}
-	public LocalTime getDepartureTime() {
+	
+	public String getDepartureTime() {
 		return departureTime;
 	}
-	public void setDepartureTime(LocalTime departureTime) {
+	public void setDepartureTime(String departureTime) {
 		this.departureTime = departureTime;
+	}
+	public String getArrivalTime() {
+		return arrivalTime;
+	}
+	public void setArrivalTime(String arrivalTime) {
+		this.arrivalTime = arrivalTime;
 	}
 	public Integer getBusinessSeats() {
 		return businessSeats;

@@ -9,8 +9,8 @@ public class City {
 	@Id
 	private Integer cityId;
 	private String cityName;
-	private Integer StateName;
-	private Integer countryName;
+	private String StateName;
+	private String countryName;
 	
 	
 	
@@ -26,19 +26,18 @@ public class City {
 	public void setCityName(String cityName) {
 		this.cityName = cityName;
 	}
-	public Integer getStateName() {
+	public String getStateName() {
 		return StateName;
 	}
-	public void setStateName(Integer stateName) {
+	public void setStateName(String stateName) {
 		StateName = stateName;
 	}
-	public Integer getCountryName() {
+	public String getCountryName() {
 		return countryName;
 	}
-	public void setCountryName(Integer countryName) {
+	public void setCountryName(String countryName) {
 		this.countryName = countryName;
 	}
-	
 	
 	
 	

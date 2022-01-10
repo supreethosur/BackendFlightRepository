@@ -8,12 +8,12 @@ public class UserDetails {
 	@Id
 	private Integer userId;
 	private String userName;
-	private Integer userMailId;
+	private String userMailId;
 	
-	public Integer getUserMailId() {
+	public String getUserMailId() {
 		return userMailId;
 	}
-	public void setUserMailId(Integer userMailId) {
+	public void setUserMailId(String userMailId) {
 		this.userMailId = userMailId;
 	}
 	public Integer getUserId() {

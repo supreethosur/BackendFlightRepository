@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 public class FlightBookingApplication {
 
 	@Bean
-	@LoadBalanced
+//	@LoadBalanced
 	public RestTemplate restTemplate(){
 		return new RestTemplate();
 	}
