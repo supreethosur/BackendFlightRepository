@@ -194,7 +194,7 @@ public class FlightBookingService {
 		else {
 			scheduleType="WD";
 		}
-		String url="http://localhost:8085/Flight/scheduleType/"+scheduleType;
+		String url="http://localhost:8082/scheduleType/"+scheduleType;
 		
 		ParameterizedTypeReference<List<Flight>> responseType= new ParameterizedTypeReference<List<Flight>>() {
 		};
@@ -203,6 +203,7 @@ public class FlightBookingService {
 		ResponseEntity<List<Flight>> res=restTemplate.exchange(url, HttpMethod.GET, httpEntity, responseType);
 		
 		List<Flight> flight1 = res.getBody();
+		System.out.println(flight1.get(0).getFlightName());
 		for (Flight flight : flight1) {
 			List<Journey> journey1= journeyRepo.getJourney(flight.getFlightId(),searchModel.getFromPlace().split(";")[0].trim(),searchModel.getToPlace().split(";")[0].trim());
 
@@ -245,7 +246,7 @@ public class FlightBookingService {
 				scheduleType="WD";
 			}
 			
-			String url1="http://localhost:8085/Flight/scheduleType/"+scheduleType;
+			String url1="http://localhost:8082/scheduleType/"+scheduleType;
 			
 			ParameterizedTypeReference<List<Flight>> responseType1= new ParameterizedTypeReference<List<Flight>>() {
 			};
