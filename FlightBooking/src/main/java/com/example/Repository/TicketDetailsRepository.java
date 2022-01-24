@@ -2,10 +2,10 @@ package com.example.Repository;
 
 import java.util.List;
 
-import javax.transaction.Transactional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.Entity.TicketDetails;
 import com.example.util.QueryConstants;
@@ -22,9 +22,11 @@ public interface TicketDetailsRepository extends JpaRepository<TicketDetails, In
 
 	List<TicketDetails> findByPnrNoAndClassNameAndIsActive(Integer pnrNumber, String classname, int i);
 
-	@Query(value=QueryConstants.DELETE_PASSANGER)
-	List<TicketDetails> updatePassangerId(Integer passangerId);
+//	@Transactional
+//	@Modifying
+//	@Query(value=QueryConstants.DELETE_PASSANGER)
+//	List<TicketDetails> updatePassangerId(Integer ticketNo);
 
 	
 	
-}
+} 

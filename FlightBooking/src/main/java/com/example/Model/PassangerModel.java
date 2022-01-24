@@ -4,14 +4,23 @@ public class PassangerModel {
 
 	private Integer userId;
 	private String userName;
-	private String passangeName;
+	private String passangerName;
 	private Integer age;
 	private String gender;
 	private String mealsType;
 	private Integer pnrNumber;
 	private boolean isBusinessClass;
 	private double amount;
+	private Integer  ticketNo;
 	
+	
+	
+	public Integer getTicketNo() {
+		return ticketNo;
+	}
+	public void setTicketNo(Integer ticketNo) {
+		this.ticketNo = ticketNo;
+	}
 	public double getAmount() {
 		return amount;
 	}
@@ -54,11 +63,12 @@ public class PassangerModel {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	public String getPassangeName() {
-		return passangeName;
+	
+	public String getPassangerName() {
+		return passangerName;
 	}
-	public void setPassangeName(String passangeName) {
-		this.passangeName = passangeName;
+	public void setPassangerName(String passangerName) {
+		this.passangerName = passangerName;
 	}
 	public String getGender() {
 		return gender;
@@ -66,6 +76,13 @@ public class PassangerModel {
 	public void setGender(String gender) {
 		this.gender = gender;
 	}
+	@Override
+	public String toString() {
+		return "PassangerModel [userId=" + userId + ", userName=" + userName + ", passangerName=" + passangerName
+				+ ", age=" + age + ", gender=" + gender + ", mealsType=" + mealsType + ", pnrNumber=" + pnrNumber
+				+ ", isBusinessClass=" + isBusinessClass + ", amount=" + amount + ", ticketNo=" + ticketNo + "]";
+	}
+	
 	
 	
 	

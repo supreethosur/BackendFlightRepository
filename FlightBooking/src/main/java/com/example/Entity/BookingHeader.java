@@ -74,6 +74,17 @@ public class BookingHeader {
 	public void setBookingStatus(Integer bookingStatus) {
 		this.bookingStatus = bookingStatus;
 	}
+	@Override
+	public String toString() {
+		return "BookingHeader [pnrNumber=" + pnrNumber + ", journeyId=" + journeyId + ", bookingStatus=" + bookingStatus
+				+ ", userId=" + userId + ", bookingDate=" + bookingDate + ", journeyDate=" + journeyDate
+				+ ", finalAmount=" + finalAmount + ", isOneWayTrip=" + isOneWayTrip + ", isOneWayTrip()="
+				+ isOneWayTrip() + ", getFinalAmount()=" + getFinalAmount() + ", getJourneyDate()=" + getJourneyDate()
+				+ ", getBookingDate()=" + getBookingDate() + ", getJourneyId()=" + getJourneyId() + ", getUserId()="
+				+ getUserId() + ", getPnrNumber()=" + getPnrNumber() + ", getBookingStatus()=" + getBookingStatus()
+				+ ", getClass()=" + getClass() + ", hashCode()=" + hashCode() + ", toString()=" + super.toString()
+				+ "]";
+	}
 	
 	
 	

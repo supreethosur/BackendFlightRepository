@@ -79,6 +79,8 @@ public class FlightBookingService {
 	@Autowired
 	RestTemplate restTemplate;
 	
+
+	
 	@Autowired
 	private KafkaTemplate<String, NotificationModel> kafkaTemplate;
 	
@@ -130,10 +132,11 @@ public class FlightBookingService {
 			journey.setFromLocation(ipflight.getFromLocation());
 			journey.setToLocation(ipflight.getToLocation());
 			journey.setAmount(ipflight.getAmount());
-			journey.setArrivalTime(LocalTime.parse(ipflight.getDepartureTime(), DateTimeFormatter.ofPattern("HH.mm.ss")));
+			System.out.println(ipflight.getDepartureTime());
+			journey.setArrivalTime(LocalTime.parse(ipflight.getArrivalTime(), DateTimeFormatter.ofPattern("HH:mm.ss")));
 //			journey.setArrivalTime(ipflight.getArrivalTime());
 //			journey.setDepartureTime(ipflight.getDepartureTime());
-			journey.setDepartureTime(LocalTime.parse(ipflight.getDepartureTime(), DateTimeFormatter.ofPattern("HH.mm.ss")));
+			journey.setDepartureTime(LocalTime.parse(ipflight.getDepartureTime(), DateTimeFormatter.ofPattern("HH:mm.ss")));
 
 			return journeyRepo.save(journey);
 
@@ -189,10 +192,10 @@ public class FlightBookingService {
 		String scheduleType="";
 		String day = searchModel.getTravelStartDate().getDayOfWeek().toString();
 		if(day.equals("SUNDAY") || day.equals("SATURDAY") ) {
-			scheduleType="WE";
+			scheduleType="Week-Ends";
 		}
 		else {
-			scheduleType="WD";
+			scheduleType="Week-Days";
 		}
 		String url="http://localhost:8082/scheduleType/"+scheduleType;
 		
@@ -287,6 +290,7 @@ public class FlightBookingService {
 			}
 			flightMapList.put("2", twoWayFlights);
 		}
+		System.out.println(flightMapList);
 		return flightMapList;
 	}
 
@@ -297,12 +301,13 @@ public class FlightBookingService {
 		return cityNames;
 	}
 	
-	public List<TicketDetails> addPassanger(List<PassangerModel> passangerModelList) {
+	public TicketDetails addPassanger(PassangerModel passangerModel) {
 		List<TicketDetails> ticketDetailsList =new ArrayList<>();
-		for (PassangerModel passangerModel : passangerModelList) {
+//		for (PassangerModel passangerModel : passangerModelList) {
+		System.out.println("inside sad service");
 			Passanger passanger =new Passanger();
 
-			passanger.setPassangerName(passangerModel.getPassangeName());
+			passanger.setPassangerName(passangerModel.getPassangerName());
 			passanger.setAge(passangerModel.getAge());
 			passanger.setAssociatedUserId(passangerModel.getUserId());
 			passanger.setGender(passangerModel.getGender());
@@ -327,13 +332,13 @@ public class FlightBookingService {
 			TicketDetails addedticket =ticketDetailsRepo.save(ticket);
 			ticket.setTicketNo(addedticket.getTicketNo());
 			
-			ticketDetailsList.add(ticket);
-		}
-		return ticketDetailsList;
+//			ticketDetailsList.add(ticket);
+//		}
+		return ticket;
 	}
 	
 	public List<BookingHeader> proceedWithBooking(ProceedBookingModel model) {
-		System.out.println(model.isOneWaytrip());
+		
 		List<BookingHeader> bookingList =new ArrayList<>();
 		if(model.isOneWaytrip()) {
 			BookingHeader header =new BookingHeader();
@@ -360,6 +365,7 @@ public class FlightBookingService {
 				bookingList.add(bookingHeader);
 			}
 		}
+		System.out.println(bookingList.toString() +" op");
 		return bookingList;
 	}
 
@@ -451,13 +457,13 @@ public class FlightBookingService {
 			model.setTimeOfEvent(LocalDateTime.now());
 			model.setUserId(userId);
 			
-			 kafkaTemplate.send(TOPIC, model);
+//			 kafkaTemplate.send(TOPIC, model);
 		}
-		
+		System.out.println("submitted");
 		return headerList;
 	}
 	
-	public List<SummaryModel> getSummary(Integer pnrNumber) {
+	public SummaryModel getSummary(Integer pnrNumber) {
 		BookingHeader bookingHeader =bookingHeaderRepo.findByPnrNumberAndBookingStatus(pnrNumber,1);
 		List<SummaryModel> summaryModelList=new ArrayList<>();
 		SummaryModel summaryModel=new SummaryModel();
@@ -474,7 +480,7 @@ public class FlightBookingService {
 				
 				passangerModel.setAge(passanger.getAge());
 				passangerModel.setAmount(ticketDetails2.getAmount());
-				
+				passangerModel.setTicketNo(ticketDetails2.getTicketNo());
 				if(ticketDetails2.getClassName().equals("Non-Business")) {
 					passangerModel.setBusinessClass(false);
 				}
@@ -483,7 +489,7 @@ public class FlightBookingService {
 				}
 				passangerModel.setGender(passanger.getGender());
 				passangerModel.setMealsType(ticketDetails2.getOptedMeals());
-				passangerModel.setPassangeName(passanger.getPassangerName());
+				passangerModel.setPassangerName(passanger.getPassangerName());
 				passangerModel.setPnrNumber(pnrNumber);
 				passangerModel.setUserId(bookingHeader.getUserId());
 				
@@ -491,7 +497,7 @@ public class FlightBookingService {
 			}
 			
 			double taxAmount=(12.0/100)*amount;
-			double serviceCharge = ticketDetails.size() * 10 ;
+			double serviceCharge = ticketDetails.size() * 100 ;
 			
 			bookingHeader.setFinalAmount(amount+taxAmount+serviceCharge);
 			bookingHeaderRepo.save(bookingHeader);
@@ -505,15 +511,16 @@ public class FlightBookingService {
 			
 			summaryModel.setAmount(finalAmount);
 			summaryModel.setPassangerList(passangerModelList);
-			summaryModelList.add(summaryModel);
+//			summaryModelList.add(summaryModel);
 		}
-		return summaryModelList;
+		return summaryModel;
 	}
 	
-	public void deletePassanger(Integer passangerId) {
+	public void deletePassanger(Integer ticketNo) {
 		
-		List<TicketDetails> ticketsDetails = ticketDetailsRepo.updatePassangerId(passangerId);
-
+		TicketDetails ticketsDetails = ticketDetailsRepo.findByTicketNo(ticketNo);
+		ticketsDetails.setIsActive(0);
+		ticketDetailsRepo.save(ticketsDetails);
 	}
 	public void cancelBooking(Integer pnrNumber) throws Exception {
 		LocalDateTime currentDateTime=LocalDateTime.now();
@@ -549,40 +556,35 @@ public class FlightBookingService {
 			UserDetails user=userDetailsRepo.findByUserMailId(emailIdOrPnr);
 			bookingHeaders = bookingHeaderRepo.findByUserId(user.getUserId());
 		}
-		
-		List<TicketModel> ticketList=new ArrayList<>();
+
 		for (BookingHeader bookingHeader : bookingHeaders) {
-			HistoryModel model=new HistoryModel();
-			
 			Journey journey = journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
 			List<TicketDetails> tickets=ticketDetailsRepo.findByPnrNo(bookingHeader.getPnrNumber());
 			for (TicketDetails ticket : tickets) {
-				TicketModel ticketModel=new TicketModel();
+				HistoryModel model=new HistoryModel();
+//				TicketModel ticketModel=new TicketModel();
 				Passanger passanger=passangerRepo.findByPassengerId(ticket.getPassangerId());
+				model.setTicketNo(ticket.getTicketNo());
+				model.setAge(passanger.getAge());
+				model.setAmount(ticket.getAmount());
+				model.setIsBusinessClass(ticket.getClassName());
 				
-				ticketModel.setAge(passanger.getAge());
-				ticketModel.setAmount(ticket.getAmount());
-				if(ticket.getClassName().equals("Non-Business")) {
-					ticketModel.setBusinessClass(false);
-				}
-				else {
-					ticketModel.setBusinessClass(true);
-				}
-				ticketModel.setGender(passanger.getGender());
-				ticketModel.setMealsType(ticket.getOptedMeals());
-				ticketModel.setPassangeName(passanger.getPassangerName());
-				ticketModel.setJourneyDate(LocalDateTime.of(bookingHeader.getJourneyDate(), journey.getDepartureTime()));
-				ticketModel.setFromToLocation(journey.getFromLocation() +" - "+ journey.getToLocation());
+				model.setGender(passanger.getGender());
+				model.setMealsType(ticket.getOptedMeals());
+				model.setPassangeName(passanger.getPassangerName());
+				model.setJourneyDate(LocalDateTime.of(bookingHeader.getJourneyDate(), journey.getDepartureTime()));
+				model.setFromToLocation(journey.getFromLocation() +" - "+ journey.getToLocation());
 				
-				ticketList.add(ticketModel);
+//				ticketList.add(ticketModel);
+				Status status= statusRepo.findByStatusId(bookingHeader.getBookingStatus());
+				
+				model.setPnrNo(bookingHeader.getPnrNumber());
+				model.setStatus(status.getStatusDescription());
+//				model.setTickets(ticketList);
+				
+				historyList.add(model);
 			}
-			Status status= statusRepo.findByStatusId(bookingHeader.getBookingStatus());
 			
-			model.setPnrNo(bookingHeader.getPnrNumber());
-			model.setStatus(status.getStatusDescription());
-			model.setTickets(ticketList);
-			
-			historyList.add(model);
 		}
 		
 		
@@ -624,6 +626,23 @@ public class FlightBookingService {
 	public List<Journey> getjourney(Integer flightId) {
 		List<Journey> journey =journeyRepo.findByFlightId(flightId);
  		return journey;
+	}
+
+	public UserDetails addUserDetails(HashMap<String, String> map) {
+		
+		UserDetails user =new UserDetails();
+		UserDetails existingUser= userDetailsRepo.findByUserMailIdAndUserName(map.get("userMailId"),map.get("userName"));
+		
+		if(existingUser!=null) {
+			return existingUser;
+		}
+		else {
+			user.setUserMailId(map.get("userMailId"));
+			user.setUserName(map.get("userName"));
+			
+			return userDetailsRepo.save(user);
+		}
+		
 	}
 
 

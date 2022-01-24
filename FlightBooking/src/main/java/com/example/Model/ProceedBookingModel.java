@@ -29,6 +29,11 @@ public class ProceedBookingModel {
 	public void setUserId(Integer userId) {
 		this.userId = userId;
 	}
+	@Override
+	public String toString() {
+		return "ProceedBookingModel [journeyInputModel=" + journeyInputModel + ", userId=" + userId + ", isOneWaytrip="
+				+ isOneWaytrip + "]";
+	}
 	
 	
 }

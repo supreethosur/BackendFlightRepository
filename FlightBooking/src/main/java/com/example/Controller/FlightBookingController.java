@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import com.example.Advice.CustomException;
 import com.example.Entity.BookingHeader;
 import com.example.Entity.Journey;
 import com.example.Entity.TicketDetails;
+import com.example.Entity.UserDetails;
 import com.example.Model.FlightModel;
 import com.example.Model.HistoryModel;
 import com.example.Model.NotificationModel;
@@ -26,6 +28,7 @@ import com.example.Model.SummaryModel;
 import com.example.Service.FlightBookingService;
 
 @RestController
+@CrossOrigin
 public class FlightBookingController {
 
 	@Autowired
@@ -42,6 +45,12 @@ public class FlightBookingController {
 			return "Hello";
 		}
 
+		@PostMapping("/addUser")
+		public UserDetails createUser(@RequestBody HashMap<String,String> map) throws Exception {
+			
+			return flightService.addUserDetails(map);
+		}
+		
 	//	@PostMapping("/addFlights")
 	//	public FlightModel addFlights(@RequestBody FlightModel ipflight) throws Exception {
 	//		
@@ -86,14 +95,17 @@ public class FlightBookingController {
 	
 
 	@PostMapping("/addPassanger")
-	public List<TicketDetails> addPassanger(@RequestBody List<PassangerModel> passangerModel) {
-		List<TicketDetails> ticket = flightService.addPassanger(passangerModel);
+	public TicketDetails addPassanger(@RequestBody PassangerModel passangerModel) {
+		System.out.println(passangerModel.toString());
+		TicketDetails ticket = flightService.addPassanger(passangerModel);
 		return ticket;
 	}
 
 
 	@PostMapping("/proceedWithFlight")
 	public List<BookingHeader> proceedWithBooking(@RequestBody ProceedBookingModel model) {
+		System.out.println(model.toString()+" ip");
+		
 		return flightService.proceedWithBooking(model);
 	}
 
@@ -103,13 +115,13 @@ public class FlightBookingController {
 	}
 
 	@GetMapping("/getSummary")
-	public List<SummaryModel> getSummary(Integer pnrNumber)  {
+	public SummaryModel getSummary(Integer pnrNumber)  {
 		return flightService.getSummary(pnrNumber);
 	}
 
 	@PostMapping("/deletePassanger")
-	public void deletePassanger(Integer passangerId) throws Exception {
-		flightService.deletePassanger(passangerId);
+	public void deletePassanger(Integer ticketNo) throws Exception {
+		flightService.deletePassanger(ticketNo);
 	}
 
 
