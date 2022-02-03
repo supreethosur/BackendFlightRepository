@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -79,7 +80,8 @@ public class FlightBookingService {
 	@Autowired
 	RestTemplate restTemplate;
 	
-
+	@Value("${FlightUrl}")
+	private String flightService;
 	
 	@Autowired
 	private KafkaTemplate<String, NotificationModel> kafkaTemplate;
@@ -197,7 +199,7 @@ public class FlightBookingService {
 		else {
 			scheduleType="Week-Days";
 		}
-		String url="http://localhost:8082/scheduleType/"+scheduleType;
+		String url=flightService+"/scheduleType/"+scheduleType;
 		
 		ParameterizedTypeReference<List<Flight>> responseType= new ParameterizedTypeReference<List<Flight>>() {
 		};
@@ -249,7 +251,7 @@ public class FlightBookingService {
 				scheduleType="WD";
 			}
 			
-			String url1="http://localhost:8082/scheduleType/"+scheduleType;
+			String url1=flightService+"/scheduleType/"+scheduleType;
 			
 			ParameterizedTypeReference<List<Flight>> responseType1= new ParameterizedTypeReference<List<Flight>>() {
 			};
@@ -419,7 +421,7 @@ public class FlightBookingService {
 				Journey journey=journeyRepo.findByJourneyId(bookingHeader.getJourneyId());
 				
 				
-				String url1="http://localhost:8082/"+journey.getFlightId();
+				String url1=flightService+"/"+journey.getFlightId();
 				System.out.println(url1);
 				ParameterizedTypeReference<Flight> responseType1= new ParameterizedTypeReference<Flight>() {
 				};
@@ -582,7 +584,7 @@ public class FlightBookingService {
 				model.setStatus(status.getStatusDescription());
 //				model.setTickets(ticketList);
 				
-				historyList.add(model);
+				historyList.add(model); 
 			}
 			
 		}
